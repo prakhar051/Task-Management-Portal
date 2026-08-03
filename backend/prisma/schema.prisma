@@ -15,13 +15,50 @@ enum Role {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
+  id           String    @id @default(uuid())
+  email        String    @unique
   name         String
   passwordHash String
-  role         Role     @default(EMPLOYEE)
+  role         Role      @default(EMPLOYEE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  // Relations
+  sessions     Session[]
+  authLogs     AuthLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  refreshToken String   @unique
+  userId       String
+  userAgent    String
+  ipAddress    String
+  expiresAt    DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  @@map("users")
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model AuthLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  status    String
+  ipAddress String
+  userAgent String
+  timestamp DateTime @default(now())
+
+  // Relations
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("auth_logs")
 }

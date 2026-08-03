@@ -1,25 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
+import AuthLayout from '../components/layout/AuthLayout';
 
 export default function Login() {
   const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
+  const loading = useAuthStore((state) => state.loading);
+  
   const { register, handleSubmit, formState: { errors } } = useForm();
+  const [serverError, setServerError] = useState(null);
 
-  const onSubmit = (data) => {
-    console.log('Login submitted:', data);
-    // Simulate login success and redirect to Dashboard
-    localStorage.setItem('user_session', JSON.stringify({ name: 'Demo User', role: 'ADMIN' }));
-    navigate('/dashboard');
+  const onSubmit = async (data) => {
+    setServerError(null);
+    const result = await login(data.email, data.password);
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setServerError(result.error);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slateDark-950 px-4 relative overflow-hidden">
-      {/* Decorative background gradients */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-
-      <div className="w-full max-w-md glass-card rounded-2xl p-8 relative z-10">
+    <AuthLayout>
+      <div className="glass-card rounded-2xl p-8 relative z-10">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-brand-500/20 text-brand-400 flex items-center justify-center rounded-2xl mx-auto mb-4 border border-brand-500/30">
             <span className="text-2xl font-bold">🎯</span>
@@ -27,6 +32,12 @@ export default function Login() {
           <h2 className="text-2xl font-extrabold text-white">Welcome Back</h2>
           <p className="text-slateDark-400 mt-2 text-sm">Access your task dashboard portal</p>
         </div>
+
+        {serverError && (
+          <div className="mb-6 p-4 rounded bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {serverError}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
@@ -52,21 +63,24 @@ export default function Login() {
           </div>
 
           <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center space-x-2 text-slateDark-400 hover:text-slateDark-300 cursor-pointer">
-              <input type="checkbox" className="rounded bg-slateDark-900 border-slateDark-800 text-brand-500 focus:ring-0 focus:ring-offset-0" />
-              <span>Remember me</span>
-            </label>
+            <div className="text-slateDark-400 text-xs">
+              Need an account?{' '}
+              <Link to="/register" className="text-brand-400 hover:text-brand-300 font-semibold transition-colors">
+                Sign Up
+              </Link>
+            </div>
             <a href="#forgot" className="text-brand-400 hover:text-brand-300 font-semibold transition-colors">Forgot password?</a>
           </div>
 
           <button
             type="submit"
-            className="w-full py-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all shadow-lg shadow-brand-600/20 active:scale-95"
+            disabled={loading}
+            className="w-full py-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all shadow-lg shadow-brand-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Sign In
+            {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

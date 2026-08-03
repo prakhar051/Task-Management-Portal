@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
 
 export default function MainLayout() {
   const navigate = useNavigate();
-  const sessionUser = JSON.parse(localStorage.getItem('user_session')) || { name: 'Admin', role: 'ADMIN' };
+  const user = useAuthStore((state) => state.user) || { name: 'Employee', role: 'EMPLOYEE' };
+  const logout = useAuthStore((state) => state.logout);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user_session');
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
@@ -21,7 +23,7 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen flex bg-slateDark-950 text-slateDark-100">
       {/* Sidebar navigation panel */}
-      <aside className="w-64 glass border-r border-slateDark-800 flex flex-col justify-between hidden md:flex">
+      <aside className="w-64 glass border-r border-slateDark-800 flex flex-col justify-between hidden md:flex animate-fade-in">
         <div>
           {/* Sidebar Header / Logo */}
           <div className="h-20 flex items-center px-8 border-b border-slateDark-900 space-x-3">
@@ -46,15 +48,22 @@ export default function MainLayout() {
 
         {/* User context footer */}
         <div className="p-4 border-t border-slateDark-900 space-y-4">
-          <div className="flex items-center space-x-3 px-2">
-            <div className="w-10 h-10 bg-brand-500/20 text-brand-400 font-bold flex items-center justify-center rounded-full border border-brand-500/30">
-              {sessionUser.name.charAt(0)}
+          <Link
+            to="/profile"
+            className="flex items-center space-x-3 px-2 py-1.5 rounded-lg hover:bg-slateDark-900 transition-colors w-full text-left cursor-pointer group"
+          >
+            <div className="w-10 h-10 bg-brand-500/20 text-brand-400 font-bold flex items-center justify-center rounded-full border border-brand-500/30 group-hover:border-brand-400 transition-colors">
+              {user.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <div className="text-sm font-bold text-white leading-tight">{sessionUser.name}</div>
-              <div className="text-xs text-slateDark-400 font-semibold uppercase tracking-wider mt-0.5">{sessionUser.role}</div>
+              <div className="text-sm font-bold text-white leading-tight group-hover:text-brand-400 transition-colors">
+                {user.name}
+              </div>
+              <div className="text-xs text-slateDark-400 font-semibold uppercase tracking-wider mt-0.5">
+                {user.role}
+              </div>
             </div>
-          </div>
+          </Link>
 
           <button
             onClick={handleLogout}
@@ -85,9 +94,9 @@ export default function MainLayout() {
             <button className="p-2 text-slateDark-400 hover:text-white rounded-lg hover:bg-slateDark-900 transition-colors">
               🔔
             </button>
-            <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-xs font-bold text-white md:hidden">
-              {sessionUser.name.charAt(0)}
-            </div>
+            <Link to="/profile" className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-xs font-bold text-white md:hidden">
+              {user.name.charAt(0).toUpperCase()}
+            </Link>
           </div>
         </header>
 

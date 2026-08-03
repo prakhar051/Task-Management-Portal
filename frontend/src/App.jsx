@@ -1,34 +1,33 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 import MainLayout from './components/layout/MainLayout';
-
-// Simple guard checking session context before rendering child components
-const PrivateRoute = ({ children }) => {
-  const session = localStorage.getItem('user_session');
-  return session ? children : <Navigate to="/login" replace />;
-};
+import ProtectedRoute from './components/layout/ProtectedRoute';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public auth path */}
+        {/* Public authentication paths */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-        {/* Private Dashboard panel paths */}
+        {/* Protected app workspace panel paths */}
         <Route
           path="/"
           element={
-            <PrivateRoute>
+            <ProtectedRoute>
               <MainLayout />
-            </PrivateRoute>
+            </ProtectedRoute>
           }
         >
-          {/* Default child redirect */}
+          {/* Default child redirect to dashboard */}
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* Catch-all navigation */}

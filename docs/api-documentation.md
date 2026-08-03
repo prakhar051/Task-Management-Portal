@@ -82,7 +82,7 @@ Creates a new member account.
 ---
 
 ### 2.2 Login User
-Authenticates a user and sets an HTTP-only secure cookie session token.
+Authenticates a user, sets an HTTP-only secure cookie session, and returns an access token.
 *   **Method**: `POST`
 *   **Path**: `/auth/login`
 *   **Access Control**: Public
@@ -95,7 +95,7 @@ Authenticates a user and sets an HTTP-only secure cookie session token.
     ```
 *   **Response Headers**:
     ```http
-    Set-Cookie: token=eyJhbGciOiJIUzI1NiIsIn...; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400
+    Set-Cookie: refreshToken=eyJhbGciOiJIUzI1NiIsIn...; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800
     ```
 *   **Response Codes & Payloads**:
     *   `200 OK`
@@ -108,8 +108,9 @@ Authenticates a user and sets an HTTP-only secure cookie session token.
               "id": "usr_90a1b2c3d4e5f6g7",
               "name": "Jane Doe",
               "email": "jane.doe@example.com",
-              "role": "MEMBER"
-            }
+              "role": "EMPLOYEE"
+            },
+            "accessToken": "eyJhbGciOiJIUzI1NiIsIn..."
           }
         }
         ```
@@ -124,56 +125,160 @@ Authenticates a user and sets an HTTP-only secure cookie session token.
 
 ---
 
-### 2.3 Logout User
-Clears the session cookie.
+### 2.3 Rotate Access Token
+Rotates the session and returns a new Access Token.
 *   **Method**: `POST`
-*   **Path**: `/auth/logout`
-*   **Access Control**: Authenticated (Member, Admin)
+*   **Path**: `/auth/refresh`
+*   **Access Control**: Public (reads `refreshToken` cookie)
 *   **Request Body**: None
 *   **Response Headers**:
     ```http
-    Set-Cookie: token=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0
+    Set-Cookie: refreshToken=new_eyJhbGciOiJIUzI1NiIsIn...; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800
     ```
 *   **Response Codes & Payloads**:
     *   `200 OK`
         ```json
         {
           "success": true,
-          "message": "Logged out successfully."
+          "message": "Token session rotated successfully.",
+          "data": {
+            "accessToken": "new_eyJhbGciOiJIUzI1NiIsIn..."
+          }
+        }
+        ```
+    *   `401 Unauthorized` (Session token invalid or expired)
+        ```json
+        {
+          "success": false,
+          "message": "Session token validation failed.",
+          "errors": []
         }
         ```
 
 ---
 
-### 2.4 Get Current User Profile
+### 2.4 Logout User
+Invalidates the database session and clears cookies.
+*   **Method**: `POST`
+*   **Path**: `/auth/logout`
+*   **Access Control**: Authenticated (Bearer Access Token + Refresh Cookie)
+*   **Request Body**: None
+*   **Response Headers**:
+    ```http
+    Set-Cookie: refreshToken=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Session logged out successfully."
+        }
+        ```
+
+---
+
+### 2.5 Get Current User Profile
 Retrieves metadata details for the active session.
 *   **Method**: `GET`
 *   **Path**: `/auth/me`
-*   **Access Control**: Authenticated (Member, Admin)
+*   **Access Control**: Authenticated (Bearer Access Token)
 *   **Request Body**: None
 *   **Response Codes & Payloads**:
     *   `200 OK`
         ```json
         {
           "success": true,
+          "message": "Profile details retrieved successfully.",
           "data": {
-            "id": "usr_90a1b2c3d4e5f6g7",
-            "name": "Jane Doe",
-            "email": "jane.doe@example.com",
-            "role": "MEMBER",
-            "createdAt": "2026-08-03T10:00:00.000Z"
+            "user": {
+              "id": "usr_90a1b2c3d4e5f6g7",
+              "name": "Jane Doe",
+              "email": "jane.doe@example.com",
+              "role": "EMPLOYEE",
+              "createdAt": "2026-08-03T10:00:00.000Z"
+            }
           }
         }
         ```
-    *   `401 Unauthorized` (Session cookie missing or invalid)
+    *   `401 Unauthorized` (Access token missing or expired)
         ```json
         {
           "success": false,
-          "message": "Authentication session token required."
+          "message": "Access token has expired."
         }
         ```
 
 ---
+
+### 2.6 Update User Profile
+Updates user name or email.
+*   **Method**: `PATCH`
+*   **Path**: `/auth/profile`
+*   **Access Control**: Authenticated (Bearer Access Token)
+*   **Request Body**:
+    ```json
+    {
+      "name": "Jane Doe Updated",
+      "email": "jane.updated@example.com"
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Profile attributes updated successfully.",
+          "data": {
+            "user": {
+              "id": "usr_90a1b2c3d4e5f6g7",
+              "name": "Jane Doe Updated",
+              "email": "jane.updated@example.com",
+              "role": "EMPLOYEE"
+            }
+          }
+        }
+        ```
+
+---
+
+### 2.7 Change Password
+Modifies account password.
+*   **Method**: `PATCH`
+*   **Path**: `/auth/change-password`
+*   **Access Control**: Authenticated (Bearer Access Token)
+*   **Request Body**:
+    ```json
+    {
+      "oldPassword": "Password123!",
+      "newPassword": "NewStrongPassword123!"
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Password changed successfully.",
+          "data": null
+        }
+        ```
+    *   `400 Bad Request` (New password same as old or complexity check fails)
+        ```json
+        {
+          "success": false,
+          "message": "Validation verification checks failed.",
+          "errors": [
+            {
+              "field": "newPassword",
+              "message": "Password must be at least 8 characters long."
+            }
+          ]
+        }
+        ```
+
+---
+
 
 ## 📋 3. Task Endpoints
 

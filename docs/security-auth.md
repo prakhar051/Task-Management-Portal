@@ -15,28 +15,63 @@ To secure account passwords against leakages or rainbow-table lookup vectors:
 
 ---
 
-## 🎟️ 2. Session Management & JWT Lifecycle
+## 🎟️ 2. Session Management & Dual-Token JWT Lifecycle
 
-Sessions utilize stateless **JSON Web Tokens (JWT)**.
-*   **Token Expiry**: Set to `24 hours` (`86400 seconds`).
-*   **Storage Strategy**: Tokens are **never** stored in client-side storage (e.g. `localStorage` or `sessionStorage`) due to vulnerability to Cross-Site Scripting (XSS) attacks. Instead, the server issues JWTs via a **secure HTTP-Only cookie**:
+The system enforces a **Dual-Token Authentication Strategy** to limit exposure of credential contexts:
+1.  **Access Token**:
+    *   **Lifetime**: Short-lived (15 minutes).
+    *   **Payload**: Encodes User ID, Email, and Role.
+    *   **Storage**: Kept strictly in-memory (inside Zustand client store). It is never written to disk or local browser storage.
+    *   **Transport**: Attached manually to the `Authorization: Bearer <accessToken>` request header for private API routes.
+2.  **Refresh Token**:
+    *   **Lifetime**: Long-lived (7 days).
+    *   **Payload**: Encodes User ID.
+    *   **Storage**: Persisted securely in the database `Session` table (enabling device tracking and revoke-on-logout features) and set on the client via a secure cookie:
+    ```http
+    Set-Cookie: refreshToken=eyJhbGciOiJIUzI1NiIsIn...; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800
+    ```
 
-```http
-Set-Cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400
-```
-
-### Cookie Directives Explained:
-*   `HttpOnly`: Prevents client-side scripts from reading the cookie value (nullifying JavaScript `document.cookie` leaks).
-*   `Secure`: Ensures the cookie is only transmitted over encrypted `HTTPS` connections.
-*   `SameSite=Strict`: Restricts cookie attachments to same-domain page contexts, preventing Cross-Site Request Forgery (CSRF).
+### 🔁 Refresh Token Rotation Workflow
+When an Access Token expires (resulting in HTTP 401), the React client automatically routes a handshake to `POST /api/auth/refresh` carrying the secure cookie. The backend executes the following rotation pipeline:
+1.  **Validate Token Signature**: Verifies refresh token decodes and matches `JWT_REFRESH_SECRET`.
+2.  **Validate Session Persistence**: Searches the database `Session` table matching the token value. If missing, blocks access.
+3.  **Expiry Check**: Verifies `expiresAt` is in the future.
+4.  **Token Rotation**: Generates a new Access Token and a new Refresh Token. Deletes the old database session and inserts a new session (or updates the token field and expiry), invalidating the single-use token.
+5.  **Set Cookie & Return JSON**: Attaches the new Refresh Token in a secure HTTP-Only cookie and returns the new Access Token in the JSON payload body.
 
 ---
 
-## 👥 3. Role-Based Access Control (RBAC) Middleware
+## 🗄️ 3. Session Persistence & Authentication Logs
 
-The system defines two authorization tiers: `ADMIN` and `MEMBER`.
-*   **Member**: Allowed to read all tasks, edit tasks assigned to them, and toggle task status.
-*   **Admin**: Inherits all Member actions, plus permissions to assign tasks, manage custom categories, and delete task records.
+### 3.1 Session Database Model
+To support multi-device logins and dynamic session revocation, session contexts are mapped in the database:
+```prisma
+model Session {
+  id           String   @id @default(uuid())
+  refreshToken String   @unique
+  userId       String
+  userAgent    String
+  ipAddress    String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+```
+
+### 3.2 Authentication Logging Engine
+Every authentication state transition is recorded in the database to prevent brute force patterns and compile audit logs:
+*   **Tracked Operations**: `REGISTRATION`, `LOGIN` (success/failed), `LOGOUT`, `REFRESH_TOKEN` (success/failed), `PASSWORD_CHANGE`, `PROFILE_UPDATE`.
+*   **Logged Metadata**: User ID, Timestamp, Request IP Address, User Agent (Browser details), Action Type, and Status (SUCCESS | FAILED).
+
+---
+
+## 👥 4. Role-Based Access Control (RBAC) Middleware
+
+The system defines three authorization tiers: `ADMIN`, `MANAGER`, and `EMPLOYEE`.
+*   **Employee**: Regular member scope. Can access dashboard stats and their own profile/tasks.
+*   **Manager**: Middle-tier management. Can review department workloads and project assignments.
+*   **Admin**: High-tier system operator. Can configure custom departments, delete data, and override settings.
 
 Here is the Express routing middleware implementation validating authorization scopes:
 
@@ -45,18 +80,19 @@ Here is the Express routing middleware implementation validating authorization s
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/db.js';
 
-export const authenticate = async (req, res, next) => {
+export const authenticateUser = async (req, res, next) => {
   try {
-    // Extract token from secure cookie
-    const token = req.cookies.token;
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
     if (!token) {
       return res.status(401).json({ success: false, message: "Access token missing." });
     }
 
-    // Verify token validity
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Check if user account remains valid in database
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
       select: { id: true, name: true, email: true, role: true }
@@ -66,15 +102,16 @@ export const authenticate = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "User account no longer exists." });
     }
 
-    // Attach active session contexts to HTTP request object
     req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ success: false, message: "Access session expired or invalid." });
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, message: "Access token has expired." });
+    }
+    return res.status(401).json({ success: false, message: "Access token credentials invalid." });
   }
 };
 
-// Middleware restricting routes to specified roles (e.g. ADMIN)
 export const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {
@@ -87,6 +124,7 @@ export const authorizeRoles = (...allowedRoles) => {
   };
 };
 ```
+
 
 ---
 

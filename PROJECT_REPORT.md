@@ -105,14 +105,14 @@ For the complete schema code and normalization breakdown, view the [docs/databas
 
 ### 5.1 Frontend Client (React)
 The client application is built as a single-page application using **React Router v6** to enforce public and private route constraints. Key highlights of the frontend design:
-*   **Custom Axios Hook**: Intercepts outgoing requests to append authentication headers and dynamically catches `401 Unauthorized` responses to clear invalid sessions.
-*   **Context API for Authentication State**: Centralized auth provider managing global user state, loading animations, and session recovery on boot.
-*   **Tailwind UI**: Modern CSS styling utilizing CSS grid, flex layouts, transition animations, and dark-theme aesthetics.
+*   **Custom Axios Client Interceptor**: Intercepts outgoing requests to append in-memory access tokens and dynamically catches `401 Unauthorized` responses to execute silent refresh token rotations, retrying failed requests.
+*   **Zustand Auth Store**: Client-side state manager handling authentication status, user profile details, loading spinners, and access tokens in memory to prevent XSS leakage.
+*   **Tailwind UI**: Modern dark-theme styled components using CSS flex grid, backdrop filters, and hover micro-animations.
 
 ### 5.2 Backend API (Node.js/Express.js)
 The backend is structured using the **Controller-Service-Repository** pattern to isolate routing, business logic, and database operations.
-*   **Middleware Pipeline**: Incoming requests pass through Helmet (header security), CORS configurations, Express-rate-limiters, and Zod parser validators before executing the controller.
-*   **JWT Handshake**: Implements validation of stateless tokens signed using a 256-bit asymmetric signature.
+*   **Middleware Pipeline**: Incoming requests pass through Helmet (header security), CORS configurations, Express-rate-limiters, and Zod validator schemas before routing.
+*   **Dual-Token Handshake**: Implements validation of stateless short-lived access tokens via authorization headers and session-rotated refresh tokens via HttpOnly cookies.
 
 For directories, structural diagrams, and source code patterns, see the [docs/architecture-guide.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/architecture-guide.md) architectural guide.
 
@@ -122,11 +122,11 @@ For directories, structural diagrams, and source code patterns, see the [docs/ar
 
 Security configuration is designed around OWASP compliance guidelines. The application uses a multi-layered security plan:
 1.  **Authentication**: Passwords are saved as irreversible hashes using `bcrypt` with a work factor of 12 rounds.
-2.  **Authorization**: Custom Express middleware verifies roles (`Admin` or `Member`) before controller routing.
-3.  **Data Protection**:
+2.  **Authorization (RBAC)**: Custom Express middleware verifies role scopes (`ADMIN`, `MANAGER`, or `EMPLOYEE`) before routing.
+3.  **Session Security**: Active logins are stored in a dedicated `Session` database table, enabling refresh token rotation, device tracking, and logout revocation.
+4.  **Data Protection**:
     *   **SQL Injection**: Prevented globally by utilizing Prisma ORM's parameterized query engines.
-    *   **Cross-Site Scripting (XSS)**: Handled by sanitizing inputs and using Helmet headers (`Content-Security-Policy`, `X-XSS-Protection`).
-    *   **Cross-Origin Requests**: Restricting access domains via configurable CORS options.
+    *   **Cross-Site Scripting (XSS)**: Handled by storing refresh tokens in secure HttpOnly cookies, keeping access tokens in memory, and using Helmet CSP headers.
 
 Read more in the detailed [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md) security evaluation.
 

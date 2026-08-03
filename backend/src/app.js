@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import authRoutes from './routes/auth.routes.js';
+import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 // Load environmental variables
 dotenv.config();
@@ -37,26 +39,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Phase 2 Authentication API router
+app.use('/api/auth', authRoutes);
+
 // Global 404 handler for unmatched routes
-app.use((req, res, next) => {
-  res.status(404).json({
-    success: false,
-    message: `Cannot ${req.method} ${req.originalUrl}`
-  });
-});
+app.use(notFoundHandler);
 
 // Global Error Handler Middleware
-app.use((err, req, res, next) => {
-  console.error('Unhandled Server Error Context:', err);
-  
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
-
-  res.status(statusCode).json({
-    success: false,
-    message,
-    errors: err.errors || []
-  });
-});
+app.use(errorHandler);
 
 export default app;
