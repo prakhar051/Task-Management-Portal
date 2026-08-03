@@ -19,6 +19,8 @@ const Tasks = lazy(() => import('./pages/Tasks'));
 const TaskDetails = lazy(() => import('./pages/TaskDetails'));
 const Notifications = lazy(() => import('./pages/Notifications'));
 const ActivityLogs = lazy(() => import('./pages/ActivityLogs'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const Reports = lazy(() => import('./pages/Reports'));
 
 function App() {
   return (
@@ -193,6 +195,38 @@ function App() {
                   </div>
                 }>
                   <ActivityLogs />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Analytics module path */}
+          <Route
+            path="analytics"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Analytics />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Reports module path */}
+          <Route
+            path="reports"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Reports />
                 </Suspense>
               </ProtectedRoute>
             }

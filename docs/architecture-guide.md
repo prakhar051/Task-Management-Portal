@@ -426,6 +426,27 @@ The board coordinates five columns mapping `TODO`, `IN_PROGRESS`, `IN_REVIEW`, `
 
 ---
 
+## 🏢 9. Analytics & Reporting Architecture (Phase 9)
+
+Phase 9 implements high-performance server-side aggregates, cache layers, and reporting pipelines:
+
+### 9.1 Cache Abstraction Layer
+A transient cache abstraction layer is implemented in `CacheService` (`backend/src/utils/cache.js`). The query caching decorator wraps database lookups with a serialized parameters key (`analytics_overview_userId_filters`) and a default TTL of 60 seconds. This prevents server overhead from multiple clicks on the client and is easily swappable with a Redis store in production.
+
+### 9.2 Unified Document Export Pipeline
+The report generator uses a single exporter pipeline (`formatExport` inside `ReportService`) which accepts structured column headers and array matrix values to serialize:
+*   **CSV**: Built using string-delimiter maps.
+*   **XLSX (SheetJS)**: Compiles workbook and worksheet buffers.
+*   **PDF (PDFKit)**: Dynamically designs custom landscape pages with table alignments, border cells, and page layouts.
+
+### 9.3 Client Visualizations (Recharts)
+The frontend uses code-split pages (`Analytics.jsx`, `Reports.jsx`) loaded lazily. Interactive visual charts map:
+*   `TrendChart`: Area charts detailing completion trends.
+*   `PieChartCard`: Doughnut charts mapping task categories.
+*   `BarChartCard`: Bar charts for team productivity rank.
+
+---
+
 ## 🔗 Internal Configuration References
 
 To understand how these directories and patterns connect to installation, security, and schema designs:

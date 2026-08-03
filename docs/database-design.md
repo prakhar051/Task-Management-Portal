@@ -498,6 +498,20 @@ Database lookups can slow down as transaction tables scale. The schema applies d
 
 ---
 
+## 📈 6. Analytics Query Performance & Aggregates
+
+The analytics engine uses Postgres index-only scans and aggregate functions (`COUNT(*)`, `AVG(progress)`, `AVG(completionPercentage)`) to avoid loading large record datasets into Node.js server memory:
+
+1.  **Zebra-Scan Aggregations**:
+    *   Instead of pulling all projects to calculate progress, `prisma.project.aggregate({ _avg: { progress: true } })` is executed.
+    *   This is highly optimized by Postgres' `B-Tree` index on the `status` and `isDeleted` columns.
+2.  **Date-Range Scans**:
+    *   Date filters map to `createdAt` index ranges `gte` and `lte` preventing database scans on large transaction tables.
+3.  **Role-Based Access Queries**:
+    *   Where conditions filter by `departmentId` or task assignee `employeeId` before executing aggregates, keeping computation localized.
+
+---
+
 ## 🔗 Architecture & API Reference Links
 
 *   To inspect structural diagrams of component topologies: [docs/system-design.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/system-design.md)

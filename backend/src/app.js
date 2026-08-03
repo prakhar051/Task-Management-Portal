@@ -12,6 +12,8 @@ import projectRoutes from './routes/project.routes.js';
 import taskRoutes from './routes/task.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import activityRoutes from './routes/activity.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
+import reportRoutes from './routes/report.routes.js';
 import { contextMiddleware } from './middleware/context.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
@@ -63,6 +65,8 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/activity', activityRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Global 404 handler for unmatched routes
 app.use(notFoundHandler);

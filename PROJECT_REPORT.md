@@ -185,7 +185,17 @@ For detailed sequence diagrams and database design documentation, consult [docs/
 
 ---
 
-## 🚀 9. Deployment Strategies
+## 📈 9. Analytics & Reporting Module (Phase 9)
+
+Phase 9 implements an enterprise-grade analytics dashboard and document generator built on server-side aggregates and caching:
+1.  **High-Performance Aggregations**: The system computes statistics directly on Neon PostgreSQL using native Prisma ORM aggregates (`_avg`, `count`) rather than reading heavy records.
+2.  **Transient Cache Abstraction**: Caches expensive database counts for 60 seconds using a transient Cache Service Map. This isolates the caching boundaries so Redis can be swapped in later without code changes.
+3.  **Role-Based Scope Guards**: Ensures strict data boundaries before query execution. Admins see full cross-department stats, managers see only their department's data, and employees are limited to personal productivity metrics.
+4.  **Decoupled Document Exporter**: Implements a unified formatting pipeline. Features on-the-fly CSV, XLSX (using SheetJS), and PDF (using PDFKit) generators returned directly as streamed downloads.
+
+---
+
+## 🚀 10. Deployment Strategies
 
 The system utilizes a fully automated, cloud-based Continuous Integration and Deployment (CI/CD) setup:
 *   **Frontend Client**: Hosted on **Vercel** with custom rewrite configurations to route SPA links safely to index.html.
@@ -196,13 +206,13 @@ Refer to [docs/installation-deployment.md](file:///c:/Resume%20Project/Task%20Ma
 
 ---
 
-## 📊 10. Challenges, Retrospective & Lessons Learned
+## 📊 11. Challenges, Retrospective & Lessons Learned
 
-### 10.1 Technical Challenges & Mitigations
+### 11.1 Technical Challenges & Mitigations
 *   **Asynchronous Database Bottlenecks**: High concurrent requests to foreign keys led to performance drops. Mitigation involved introducing pooled connections and indexing relationships.
 *   **Stateless Token Expiry UX**: Standard token lifespans disrupted user sessions mid-use. Resolved by using client-side Axios refresh interceptors to extend sessions silently.
 
-### 10.2 Engineering Learning Outcomes
+### 11.2 Engineering Learning Outcomes
 The implementation of the Task Management Portal provided hands-on experience in:
 *   Relational database normalizations and performance indexing.
 *   Building security middleware stacks in Express.js.

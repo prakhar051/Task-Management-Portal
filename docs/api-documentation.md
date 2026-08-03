@@ -1596,6 +1596,63 @@ Appends a conversation comment.
 
 ---
 
+## 📊 11. Analytics Endpoints
+
+All endpoints are protected by `authenticateUser`. Query visibility is restricted strictly by user roles (ADMIN: all, MANAGER: department, EMPLOYEE: personal).
+
+### 11.1 Get Overview Analytics
+*   **Method**: `GET`
+*   **Path**: `/analytics/overview`
+*   **Response Payload**: Returns total counts, averages, and trend arrays for tasks, projects, employees, and departments.
+
+### 11.2 Get Employee Analytics
+*   **Method**: `GET`
+*   **Path**: `/analytics/employees`
+
+### 11.3 Get Department Analytics
+*   **Method**: `GET`
+*   **Path**: `/analytics/departments`
+
+### 11.4 Get Project Analytics
+*   **Method**: `GET`
+*   **Path**: `/analytics/projects`
+
+### 11.5 Get Task Analytics
+*   **Method**: `GET`
+*   **Path**: `/analytics/tasks`
+
+### 11.6 Get Productivity Analytics
+*   **Method**: `GET`
+*   **Path**: `/analytics/productivity`
+
+---
+
+## 📥 12. Reports Endpoints
+
+All endpoints support `format=csv`, `format=xlsx`, and `format=pdf` query parameters.
+
+### 12.1 Get Employee Report
+*   **Method**: `GET`
+*   **Path**: `/reports/employees`
+
+### 12.2 Get Department Report
+*   **Method**: `GET`
+*   **Path**: `/reports/departments`
+
+### 12.3 Get Project Report
+*   **Method**: `GET`
+*   **Path**: `/reports/projects`
+
+### 12.4 Get Task Report
+*   **Method**: `GET`
+*   **Path**: `/reports/tasks`
+
+### 12.5 Get Productivity Report
+*   **Method**: `GET`
+*   **Path**: `/reports/productivity`
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)
