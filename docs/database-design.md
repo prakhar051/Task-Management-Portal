@@ -226,12 +226,92 @@ model Department {
   // Relations
   employees    Employee[]       @relation("DepartmentEmployees")
   manager      Employee?        @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  projects     Project[]        @relation("DepartmentProjects")
 
   @@index([code])
   @@index([status])
   @@index([managerId])
   @@index([createdAt])
   @@map("departments")
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ProjectMemberRole {
+  PROJECT_MANAGER
+  TEAM_LEAD
+  DEVELOPER
+  TESTER
+  DESIGNER
+  BUSINESS_ANALYST
+  MEMBER
+}
+
+model Project {
+  id           String          @id @default(uuid())
+  code         String          @unique
+  name         String
+  description  String?
+  departmentId String
+  managerId    String?         
+  startDate    DateTime
+  endDate      DateTime
+  priority     ProjectPriority @default(MEDIUM)
+  status       ProjectStatus   @default(PLANNING)
+  budget       Float?
+  progress     Int             @default(0)
+  isDeleted    Boolean         @default(false)
+  deletedAt    DateTime?
+
+  // Audit Fields
+  createdById  String?
+  updatedById  String?
+  deletedById  String?
+
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  // Relations
+  department   Department      @relation("DepartmentProjects", fields: [departmentId], references: [id], onDelete: Restrict)
+  manager      Employee?       @relation("ProjectManager", fields: [managerId], references: [id], onDelete: SetNull)
+  members      ProjectMember[]
+
+  @@index([code])
+  @@index([status])
+  @@index([priority])
+  @@index([departmentId])
+  @@index([managerId])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id         String            @id @default(uuid())
+  projectId  String
+  employeeId String
+  role       ProjectMemberRole @default(MEMBER)
+  joinedAt   DateTime          @default(now())
+
+  // Relations
+  project    Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee   Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, employeeId])
+  @@index([projectId])
+  @@index([employeeId])
+  @@map("project_members")
 }
 ```
 
@@ -247,11 +327,15 @@ Database lookups can slow down as transaction tables scale. The schema applies d
     *   `@@index([managerId])` on the `employees` table. Speeds up managers reading their team lists.
     *   `@@index([managerId])` on the `departments` table. Speeds up manager lookup listings.
     *   `@@index([createdAt])` on the `departments` table. Speeds up pagination ordering.
+    *   `@@index([departmentId])` and `@@index([managerId])` on the `projects` table. Speeds up filtering queries.
+    *   `@@index([projectId])` and `@@index([employeeId])` on the `project_members` join table. Speeds up relational mapping scans.
 2.  **Unique Indexes**:
-    *   Prisma automatically configures native unique indexes on `User(email)`, `Employee(email)`, `Employee(employeeCode)`, `Department(email)`, `Department(name)`, and `Department(code)`. This speeds up verification checks during signup actions and unique code lookups.
+    *   Prisma automatically configures native unique indexes on `User(email)`, `Employee(email)`, `Employee(employeeCode)`, `Department(email)`, `Department(name)`, `Department(code)`, and `Project(code)`.
+    *   `@@unique([projectId, employeeId])` on `project_members` to enforce single mapping logic, preventing duplicate memberships.
 3.  **Filtered Search Indexes**:
-    *   `@@index([status])` on the `employees` table. Speeds up rendering stats filtered by ACTIVE or ON_LEAVE states.
+    *   `@@index([status])` on the `employees` table. Speeds up rendering stats.
     *   `@@index([code])` and `@@index([status])` on the `departments` table. Speeds up filter scans.
+    *   `@@index([code])`, `@@index([status])`, and `@@index([priority])` on the `projects` table.
 
 ---
 

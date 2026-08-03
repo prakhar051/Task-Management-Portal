@@ -301,6 +301,54 @@ Inside the Department Details view, sub-modals handle assignments:
 *   `ManagerAssignmentModal`: Renders active employees select list, updating manager ID configurations.
 *   `EmployeeAssignmentModal`: Renders checklist grids, linking multiple employees to the department in a single patch call.
 
+## 📂 7. Project Management Architecture & Workflows
+
+The Project Module utilizes many-to-many database structures using the `ProjectMember` join model.
+
+### 7.1 Transactional Member Allocation Repository (Backend)
+To assign project members safely, a transaction block deletes previous allocations and bulk inserts new ones after validating project state and employee profiles:
+```javascript
+// src/repositories/project.repository.js
+static async assignMembers(id, members, updatedById) {
+  return prisma.$transaction(async (tx) => {
+    // 1. Verify project state
+    const project = await tx.project.findUnique({ where: { id } });
+    if (!project || project.isDeleted || project.status === 'CANCELLED') {
+      throw new Error('Project invalid or cannot receive new members.');
+    }
+    // 2. Validate employee existence
+    const employeeIds = members.map(m => m.employeeId);
+    const count = await tx.employee.count({ where: { id: { in: employeeIds }, isDeleted: false } });
+    if (count !== employeeIds.length) {
+      throw new Error('One or more selected employees are invalid.');
+    }
+    // 3. Sync join memberships
+    await tx.projectMember.deleteMany({ where: { projectId: id } });
+    await tx.projectMember.createMany({
+      data: members.map(m => ({ projectId: id, employeeId: m.employeeId, role: m.role }))
+    });
+    return await tx.project.update({ where: { id }, data: { updatedById } });
+  });
+}
+```
+
+### 7.2 Frontend Page & Modal Architecture
+The layout incorporates code-split directory pages:
+```
+Projects (page)
+│
+├── ProjectToolbar (coordinates search input and action triggers)
+│
+├── ProjectStatistics (renders overall metrics aggregate cards)
+│
+└── ProjectTable (registers projects and links)
+```
+
+Inside the Project Details view:
+*   `TimelineCard`: Calculates start and target dates, elapsed duration, and days remaining.
+*   `ManagerAssignmentModal`: Renders employees selector dropdowns, assigning project manager.
+*   `MemberAssignmentModal`: Renders checkboxes list with dropdown role allocations (`TEAM_LEAD`, `DEVELOPER`, `TESTER`, etc.) to map project members in a transaction.
+
 ---
 
 ## 🔗 Internal Configuration References

@@ -71,34 +71,36 @@ model AuthLog {
 }
 
 model Employee {
-  id           String         @id @default(uuid())
-  employeeCode String         @unique
-  userId       String?        @unique
-  firstName    String
-  lastName     String
-  email        String         @unique
-  phone        String
-  designation  String
-  departmentId String?        
-  managerId    String?        // Nullable
-  hireDate     DateTime
-  avatar       String?
-  status       EmployeeStatus @default(ACTIVE)
-  isDeleted    Boolean        @default(false)
-  deletedAt    DateTime?
+  id                 String         @id @default(uuid())
+  employeeCode       String         @unique
+  userId             String?        @unique
+  firstName          String
+  lastName           String
+  email              String         @unique
+  phone              String
+  designation        String
+  departmentId       String?        
+  managerId          String?        // Nullable
+  hireDate           DateTime
+  avatar             String?
+  status             EmployeeStatus @default(ACTIVE)
+  isDeleted          Boolean        @default(false)
+  deletedAt          DateTime?
   
   // Audit properties
-  createdById  String?
-  updatedById  String?
-  deletedById  String?
+  createdById        String?
+  updatedById        String?
+  deletedById        String?
   
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 
   // Relations
   user               User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   department         Department?    @relation("DepartmentEmployees", fields: [departmentId], references: [id], onDelete: SetNull)
   managedDepartments Department[]   @relation("DepartmentManager")
+  managedProjects    Project[]      @relation("ProjectManager")
+  projectMemberships ProjectMember[]
 
   @@index([employeeCode])
   @@index([email])
@@ -136,6 +138,7 @@ model Department {
   // Relations
   employees    Employee[]       @relation("DepartmentEmployees")
   manager      Employee?        @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  projects     Project[]        @relation("DepartmentProjects")
 
   @@index([code])
   @@index([status])
@@ -144,3 +147,81 @@ model Department {
   @@map("departments")
 }
 
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ProjectMemberRole {
+  PROJECT_MANAGER
+  TEAM_LEAD
+  DEVELOPER
+  TESTER
+  DESIGNER
+  BUSINESS_ANALYST
+  MEMBER
+}
+
+model Project {
+  id           String          @id @default(uuid())
+  code         String          @unique
+  name         String
+  description  String?
+  departmentId String
+  managerId    String?         // Links to Employee.id (Nullable)
+  startDate    DateTime
+  endDate      DateTime
+  priority     ProjectPriority @default(MEDIUM)
+  status       ProjectStatus   @default(PLANNING)
+  budget       Float?
+  progress     Int             @default(0)
+  isDeleted    Boolean         @default(false)
+  deletedAt    DateTime?
+
+  // Audit Fields
+  createdById  String?
+  updatedById  String?
+  deletedById  String?
+
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  // Relations
+  department   Department      @relation("DepartmentProjects", fields: [departmentId], references: [id], onDelete: Restrict)
+  manager      Employee?       @relation("ProjectManager", fields: [managerId], references: [id], onDelete: SetNull)
+  members      ProjectMember[]
+
+  @@index([code])
+  @@index([status])
+  @@index([priority])
+  @@index([departmentId])
+  @@index([managerId])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id         String            @id @default(uuid())
+  projectId  String
+  employeeId String
+  role       ProjectMemberRole @default(MEMBER)
+  joinedAt   DateTime          @default(now())
+
+  // Relations
+  project    Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee   Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, employeeId])
+  @@index([projectId])
+  @@index([employeeId])
+  @@map("project_members")
+}

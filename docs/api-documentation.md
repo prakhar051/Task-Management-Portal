@@ -1223,6 +1223,195 @@ Downloads CSV or XLSX files.
 
 ---
 
+## 📂 9. Project Endpoints
+
+### 9.1 List Projects (Paginated & Filtered)
+Queries projects directory with RBAC restrictions.
+*   **Method**: `GET`
+*   **Path**: `/projects`
+*   **Access Control**: Authenticated (ADMIN: full, MANAGER: own dept/projects, EMPLOYEE: member only)
+*   **Query Parameters**:
+    *   `page` (optional, default: `1`)
+    *   `limit` (optional, default: `10`)
+    *   `search` (optional)
+    *   `status` (optional)
+    *   `priority` (optional)
+    *   `departmentId` (optional)
+    *   `managerId` (optional)
+    *   `isDeleted` (optional, default: `false`)
+    *   `sortBy` (optional, `name | progress | startDate | endDate | createdAt`)
+    *   `sortOrder` (optional, `asc | desc`)
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Projects retrieved successfully.",
+          "data": [
+            {
+              "id": "proj_uuid",
+              "code": "PROJ-101",
+              "name": "Cloud Portal",
+              "status": "ACTIVE",
+              "priority": "HIGH",
+              "progress": 45,
+              "department": { "id": "dept_id", "name": "Engineering" },
+              "manager": { "id": "emp_id", "firstName": "Alice", "lastName": "Smith" },
+              "_count": { "members": 5 }
+            }
+          ],
+          "pagination": { "page": 1, "limit": 10, "total": 1, "pages": 1 }
+        }
+        ```
+
+---
+
+### 9.2 Get Project By ID
+Fetches details of a single project.
+*   **Method**: `GET`
+*   **Path**: `/projects/:id`
+*   **Access Control**: Authenticated (RBAC protected)
+*   **Response Payload**: Returns full project model including manager, department, and member list.
+
+---
+
+### 9.3 Create Project
+Registers a new project track.
+*   **Method**: `POST`
+*   **Path**: `/projects`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "name": "Cloud Portal",
+      "code": "PROJ-101",
+      "departmentId": "dept_uuid",
+      "startDate": "2026-08-01T00:00:00.000Z",
+      "endDate": "2026-12-31T00:00:00.000Z",
+      "priority": "HIGH",
+      "status": "ACTIVE",
+      "progress": 0,
+      "budget": 75000
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `201 Created`
+
+---
+
+### 9.4 Update Project Details
+Edits project attributes.
+*   **Method**: `PATCH`
+*   **Path**: `/projects/:id`
+*   **Access Control**: Admin Only
+*   **Request Body**: `{ "progress": 50 }`
+
+---
+
+### 9.5 Soft Delete Project
+Moves project to trash and clears active members list.
+*   **Method**: `DELETE`
+*   **Path**: `/projects/:id`
+*   **Access Control**: Admin Only
+
+---
+
+### 9.6 Restore Project
+Restores a soft-deleted project.
+*   **Method**: `PATCH`
+*   **Path**: `/projects/:id/restore`
+*   **Access Control**: Admin Only
+
+---
+
+### 9.7 Assign Project Manager
+Maps managing employee to project.
+*   **Method**: `PATCH`
+*   **Path**: `/projects/:id/manager`
+*   **Access Control**: Admin Only
+*   **Request Body**: `{ "managerId": "emp_uuid" }`
+
+---
+
+### 9.8 Assign Project Members (Bulk)
+Allocates members with custom role assignments. Prevents duplicates.
+*   **Method**: `PATCH`
+*   **Path**: `/projects/:id/members`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "members": [
+        { "employeeId": "emp_uuid_1", "role": "TEAM_LEAD" },
+        { "employeeId": "emp_uuid_2", "role": "DEVELOPER" }
+      ]
+    }
+    ```
+
+---
+
+### 9.9 Get Project Members
+Lists workforce members assigned as project team.
+*   **Method**: `GET`
+*   **Path**: `/projects/:id/members`
+*   **Access Control**: Authenticated
+
+---
+
+### 9.10 Get Project Statistics
+Returns project-specific timeline stats.
+*   **Method**: `GET`
+*   **Path**: `/projects/:id/statistics`
+*   **Access Control**: Authenticated
+
+---
+
+### 9.11 Get Global Projects Statistics
+Aggregates overall directory metrics.
+*   **Method**: `GET`
+*   **Path**: `/projects/statistics`
+*   **Access Control**: Authenticated (ADMIN, MANAGER)
+*   **Response Payload**:
+    ```json
+    {
+      "success": true,
+      "data": {
+        "totalProjects": 8,
+        "activeProjects": 4,
+        "completedProjects": 2,
+        "onHoldProjects": 1,
+        "cancelledProjects": 1,
+        "overdueProjects": 1,
+        "endingWithin7Days": 1,
+        "averageProgress": 52,
+        "averageDuration": 120,
+        "totalMembers": 15,
+        "departmentDistribution": { "Engineering": 4, "Marketing": 2 },
+        "statusDistribution": { "PLANNING": 1, "ACTIVE": 4, "ON_HOLD": 1, "COMPLETED": 2 }
+      }
+    }
+    ```
+
+---
+
+### 9.12 Bulk Operations (Soft Delete, Status, Restore)
+Admin tool actions:
+*   `DELETE /projects/bulk` -> body `{ ids: [UUID] }`
+*   `PATCH /projects/bulk-status` -> body `{ ids: [UUID], status: "ACTIVE" }`
+*   `PATCH /projects/bulk-restore` -> body `{ ids: [UUID] }`
+
+---
+
+### 9.13 Export Projects
+Downloads CSV or XLSX files.
+*   **Method**: `GET`
+*   **Path**: `/projects/export`
+*   **Access Control**: Authenticated (ADMIN, MANAGER)
+*   **Query Parameters**:
+    *   `format` (`csv` | `xlsx`)
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)
