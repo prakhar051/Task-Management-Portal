@@ -1,0 +1,462 @@
+# 🔌 REST API Documentation
+**Task Management Portal API Specification**
+
+---
+
+## 🌐 1. Connection Configurations
+
+### Base URLs
+*   **Development**: `http://localhost:5000/api`
+*   **Production**: `https://task-portal-backend.render.com/api`
+
+### Global Content Schema
+All request payloads and response bodies must adhere strictly to the JSON standard.
+*   **Default Headers Required**:
+    ```http
+    Content-Type: application/json
+    Accept: application/json
+    ```
+
+### Global Error Payload Format
+If an API operation fails, a standardized JSON envelope is returned along with the matching HTTP status code:
+```json
+{
+  "success": false,
+  "message": "Invalid request parameters provided.",
+  "errors": [
+    {
+      "field": "title",
+      "issue": "Title cannot be empty"
+    },
+    {
+      "field": "dueDate",
+      "issue": "Must be a valid ISO-8601 date string"
+    }
+  ]
+}
+```
+
+---
+
+## 🔒 2. Authentication Endpoints
+
+### 2.1 Register New User
+Creates a new member account.
+*   **Method**: `POST`
+*   **Path**: `/auth/register`
+*   **Access Control**: Public
+*   **Request Body**:
+    ```json
+    {
+      "name": "Jane Doe",
+      "email": "jane.doe@example.com",
+      "password": "Password123!",
+      "role": "MEMBER"
+    }
+    ```
+*   **Response Headers**: None
+*   **Response Codes & Payloads**:
+    *   `201 Created`
+        ```json
+        {
+          "success": true,
+          "message": "User registered successfully.",
+          "data": {
+            "id": "usr_90a1b2c3d4e5f6g7",
+            "name": "Jane Doe",
+            "email": "jane.doe@example.com",
+            "role": "MEMBER",
+            "createdAt": "2026-08-03T10:00:00.000Z"
+          }
+        }
+        ```
+    *   `400 Bad Request` (Email already registered or validation failed)
+        ```json
+        {
+          "success": false,
+          "message": "Email address already registered.",
+          "errors": []
+        }
+        ```
+
+---
+
+### 2.2 Login User
+Authenticates a user and sets an HTTP-only secure cookie session token.
+*   **Method**: `POST`
+*   **Path**: `/auth/login`
+*   **Access Control**: Public
+*   **Request Body**:
+    ```json
+    {
+      "email": "jane.doe@example.com",
+      "password": "Password123!"
+    }
+    ```
+*   **Response Headers**:
+    ```http
+    Set-Cookie: token=eyJhbGciOiJIUzI1NiIsIn...; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Authentication successful.",
+          "data": {
+            "user": {
+              "id": "usr_90a1b2c3d4e5f6g7",
+              "name": "Jane Doe",
+              "email": "jane.doe@example.com",
+              "role": "MEMBER"
+            }
+          }
+        }
+        ```
+    *   `401 Unauthorized` (Invalid email or password)
+        ```json
+        {
+          "success": false,
+          "message": "Invalid email or password.",
+          "errors": []
+        }
+        ```
+
+---
+
+### 2.3 Logout User
+Clears the session cookie.
+*   **Method**: `POST`
+*   **Path**: `/auth/logout`
+*   **Access Control**: Authenticated (Member, Admin)
+*   **Request Body**: None
+*   **Response Headers**:
+    ```http
+    Set-Cookie: token=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Logged out successfully."
+        }
+        ```
+
+---
+
+### 2.4 Get Current User Profile
+Retrieves metadata details for the active session.
+*   **Method**: `GET`
+*   **Path**: `/auth/me`
+*   **Access Control**: Authenticated (Member, Admin)
+*   **Request Body**: None
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "data": {
+            "id": "usr_90a1b2c3d4e5f6g7",
+            "name": "Jane Doe",
+            "email": "jane.doe@example.com",
+            "role": "MEMBER",
+            "createdAt": "2026-08-03T10:00:00.000Z"
+          }
+        }
+        ```
+    *   `401 Unauthorized` (Session cookie missing or invalid)
+        ```json
+        {
+          "success": false,
+          "message": "Authentication session token required."
+        }
+        ```
+
+---
+
+## 📋 3. Task Endpoints
+
+### 3.1 List Tasks
+Queries tasks with pagination, search, status, and priority filtering.
+*   **Method**: `GET`
+*   **Path**: `/tasks`
+*   **Access Control**: Authenticated (Member, Admin)
+*   **Query Parameters**:
+    *   `page` (optional, default: `1`): Page number.
+    *   `limit` (optional, default: `10`): Max tasks per response page.
+    *   `status` (optional): Filter by `TODO`, `IN_PROGRESS`, `COMPLETED`.
+    *   `priority` (optional): Filter by `LOW`, `MEDIUM`, `HIGH`.
+    *   `search` (optional): Search string matching Title or Description fields.
+    *   `categoryId` (optional): Filter tasks belonging to a specific category UUID.
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "data": {
+            "tasks": [
+              {
+                "id": "tsk_55b6c7d8e9f0a1b2",
+                "title": "Database Schema Setup",
+                "description": "Configure tables for relational normalization and write db migrations.",
+                "status": "IN_PROGRESS",
+                "priority": "HIGH",
+                "dueDate": "2026-08-15T18:00:00.000Z",
+                "assignee": {
+                  "id": "usr_90a1b2c3d4e5f6g7",
+                  "name": "Jane Doe",
+                  "email": "jane.doe@example.com"
+                },
+                "category": {
+                  "id": "cat_11a2b3c4d5e6f7g8",
+                  "name": "Database Engineering"
+                },
+                "createdAt": "2026-08-03T10:30:00.000Z"
+              }
+            ],
+            "pagination": {
+              "totalItems": 1,
+              "totalPages": 1,
+              "currentPage": 1,
+              "limit": 10
+            }
+          }
+        }
+        ```
+
+---
+
+### 3.2 Create New Task
+Instantiates a new workflow task.
+*   **Method**: `POST`
+*   **Path**: `/tasks`
+*   **Access Control**: Authenticated (Member, Admin)
+*   **Request Body**:
+    ```json
+    {
+      "title": "Setup Integration Tests",
+      "description": "Establish a test script harness validating mock user auth flows.",
+      "priority": "MEDIUM",
+      "dueDate": "2026-08-20T17:00:00.000Z",
+      "categoryId": "cat_11a2b3c4d5e6f7g8",
+      "assigneeId": "usr_90a1b2c3d4e5f6g7"
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `201 Created`
+        ```json
+        {
+          "success": true,
+          "message": "Task created successfully.",
+          "data": {
+            "id": "tsk_88c9d0e1f2a3b4c5",
+            "title": "Setup Integration Tests",
+            "description": "Establish a test script harness validating mock user auth flows.",
+            "status": "TODO",
+            "priority": "MEDIUM",
+            "dueDate": "2026-08-20T17:00:00.000Z",
+            "categoryId": "cat_11a2b3c4d5e6f7g8",
+            "assigneeId": "usr_90a1b2c3d4e5f6g7",
+            "creatorId": "usr_admin_master_1",
+            "createdAt": "2026-08-03T10:45:00.000Z"
+          }
+        }
+        ```
+    *   `400 Bad Request` (Missing fields or invalid relationships)
+        ```json
+        {
+          "success": false,
+          "message": "Associated category or assignee user not found.",
+          "errors": []
+        }
+        ```
+
+---
+
+### 3.3 Update Entire Task (Full Edit)
+Performs complete field adjustments for the selected task.
+*   **Method**: `PUT`
+*   **Path**: `/tasks/:id`
+*   **Access Control**: Authenticated (Member, Admin)
+*   **Request Body**:
+    ```json
+    {
+      "title": "Setup Integration Tests & Mock Data",
+      "description": "Establish a test script harness and seed JSON schemas.",
+      "priority": "HIGH",
+      "status": "IN_PROGRESS",
+      "dueDate": "2026-08-22T17:00:00.000Z",
+      "categoryId": "cat_11a2b3c4d5e6f7g8",
+      "assigneeId": "usr_90a1b2c3d4e5f6g7"
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Task updated successfully.",
+          "data": {
+            "id": "tsk_88c9d0e1f2a3b4c5",
+            "title": "Setup Integration Tests & Mock Data",
+            "description": "Establish a test script harness and seed JSON schemas.",
+            "status": "IN_PROGRESS",
+            "priority": "HIGH",
+            "dueDate": "2026-08-22T17:00:00.000Z",
+            "categoryId": "cat_11a2b3c4d5e6f7g8",
+            "assigneeId": "usr_90a1b2c3d4e5f6g7",
+            "updatedAt": "2026-08-03T11:00:00.000Z"
+          }
+        }
+        ```
+    *   `404 Not Found`
+        ```json
+        {
+          "success": false,
+          "message": "Task matching ID 'tsk_88c9d0e1f2a3b4c5' not found."
+        }
+        ```
+
+---
+
+### 3.4 Patch Task Status
+Quick status transition endpoint (e.g., drag-and-drop on Kanban).
+*   **Method**: `PATCH`
+*   **Path**: `/tasks/:id/status`
+*   **Access Control**: Authenticated (Member, Admin)
+*   **Request Body**:
+    ```json
+    {
+      "status": "COMPLETED"
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Task status transitioned successfully.",
+          "data": {
+            "id": "tsk_88c9d0e1f2a3b4c5",
+            "status": "COMPLETED",
+            "updatedAt": "2026-08-03T11:15:00.000Z"
+          }
+        }
+        ```
+
+---
+
+### 3.5 Delete Task
+Permanently deletes a task.
+*   **Method**: `DELETE`
+*   **Path**: `/tasks/:id`
+*   **Access Control**: Admin Only
+*   **Request Body**: None
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Task successfully purged from persistent storage."
+        }
+        ```
+    *   `403 Forbidden` (Member attempts deletion)
+        ```json
+        {
+          "success": false,
+          "message": "Administrator privileges required to execute delete actions."
+        }
+        ```
+
+---
+
+## 📁 4. Category Endpoints
+
+### 4.1 List Categories
+Gets all categories for task tags.
+*   **Method**: `GET`
+*   **Path**: `/categories`
+*   **Access Control**: Authenticated (Member, Admin)
+*   **Request Body**: None
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "data": [
+            {
+              "id": "cat_11a2b3c4d5e6f7g8",
+              "name": "Database Engineering",
+              "description": "Relational schemes, migration steps, and ORM settings.",
+              "createdAt": "2026-08-03T09:00:00.000Z"
+            }
+          ]
+        }
+        ```
+
+### 4.2 Create Category
+Creates a new task category.
+*   **Method**: `POST`
+*   **Path**: `/categories`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "name": "Frontend Engineering",
+      "description": "Component layouts, styles, and routing structures."
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `201 Created`
+        ```json
+        {
+          "success": true,
+          "message": "Category created successfully.",
+          "data": {
+            "id": "cat_22b3c4d5e6f7g8h9",
+            "name": "Frontend Engineering",
+            "description": "Component layouts, styles, and routing structures.",
+            "createdAt": "2026-08-03T11:20:00.000Z"
+          }
+        }
+        ```
+
+---
+
+## 👥 5. User Resource Endpoints
+
+### 5.1 List All Users
+Used by administrators to populate task assignee dropdown menus.
+*   **Method**: `GET`
+*   **Path**: `/users`
+*   **Access Control**: Authenticated (Member, Admin)
+*   **Request Body**: None
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "data": [
+            {
+              "id": "usr_admin_master_1",
+              "name": "Admin Operator",
+              "email": "admin@taskportal.demo",
+              "role": "ADMIN"
+            },
+            {
+              "id": "usr_90a1b2c3d4e5f6g7",
+              "name": "Jane Doe",
+              "email": "jane.doe@example.com",
+              "role": "MEMBER"
+            }
+          ]
+        }
+        ```
+
+---
+
+## 🔗 Architecture & Security References
+
+*   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)
+*   To trace where these endpoints connect inside the codebase: [docs/architecture-guide.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/architecture-guide.md)
