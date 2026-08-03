@@ -1653,6 +1653,72 @@ All endpoints support `format=csv`, `format=xlsx`, and `format=pdf` query parame
 
 ---
 
+## 🌴 13. Leaves Endpoints
+
+All endpoints are protected by `authenticateUser`.
+
+### 13.1 List Leaves
+*   **Method**: `GET`
+*   **Path**: `/leaves`
+*   **Access Control**: Authenticated (ADMIN: all, MANAGER: department, EMPLOYEE: personal)
+
+### 13.2 Create Leave Request
+*   **Method**: `POST`
+*   **Path**: `/leaves`
+
+### 13.3 Cancel Leave Request
+*   **Method**: `PATCH`
+*   **Path**: `/leaves/:id`
+
+### 13.4 Delete Leave Request
+*   **Method**: `DELETE`
+*   **Path**: `/leaves/:id`
+*   **Access Control**: Admin Only
+
+### 13.5 Approve Leave
+*   **Method**: `PATCH`
+*   **Path**: `/leaves/:id/approve`
+*   **Access Control**: Admin or Manager (if same department)
+
+### 13.6 Reject Leave
+*   **Method**: `PATCH`
+*   **Path**: `/leaves/:id/reject`
+*   **Access Control**: Admin or Manager (if same department)
+
+---
+
+## 📅 14. Calendar Endpoints
+
+All endpoints are protected by `authenticateUser`.
+
+### 14.1 Get Unified Calendar Feed
+*   **Method**: `GET`
+*   **Path**: `/calendar`
+*   **Query Parameters**: `startDate`, `endDate`, `departmentId`, `employeeId`, `projectId`, `type`
+
+### 14.2 Get Team Calendar Feed
+*   **Method**: `GET`
+*   **Path**: `/calendar/team`
+
+### 14.3 Get Upcoming Events List
+*   **Method**: `GET`
+*   **Path**: `/calendar/upcoming`
+
+### 14.4 Create Event
+*   **Method**: `POST`
+*   **Path**: `/calendar/events`
+
+### 14.5 Update Event
+*   **Method**: `PATCH`
+*   **Path**: `/calendar/events/:id`
+*   **Query Parameters**: `drag=true` for drag-drop date coordinates adjustments
+
+### 14.6 Delete Event
+*   **Method**: `DELETE`
+*   **Path**: `/calendar/events/:id`
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)

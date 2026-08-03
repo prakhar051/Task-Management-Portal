@@ -21,6 +21,8 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const ActivityLogs = lazy(() => import('./pages/ActivityLogs'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Reports = lazy(() => import('./pages/Reports'));
+const Calendar = lazy(() => import('./pages/Calendar'));
+const LeaveManagement = lazy(() => import('./pages/LeaveManagement'));
 
 function App() {
   return (
@@ -227,6 +229,38 @@ function App() {
                   </div>
                 }>
                   <Reports />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Calendar module path */}
+          <Route
+            path="calendar"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Calendar />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Leaves module path */}
+          <Route
+            path="leaves"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <LeaveManagement />
                 </Suspense>
               </ProtectedRoute>
             }

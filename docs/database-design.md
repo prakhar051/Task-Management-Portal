@@ -512,6 +512,21 @@ The analytics engine uses Postgres index-only scans and aggregate functions (`CO
 
 ---
 
+## 📅 7. Calendar & Scheduling Indexes
+
+To optimize range searches and lookup queries across calendar and scheduling tables, indexes are configured on the following attributes:
+
+1.  **Leave Request Indexes**:
+    *   `@@index([employeeId])` — speeds up personal leave logs checks.
+    *   `@@index([status])` — speeds up pending review list queries.
+    *   `@@index([startDate])` and `@@index([endDate])` — speeds up leave overlap checks.
+2.  **Calendar Event Indexes**:
+    *   `@@index([startDate])` and `@@index([endDate])` — speeds up monthly/weekly date view queries.
+    *   `@@index([type])` — speeds up category filters scans.
+    *   `@@index([employeeId])`, `@@index([projectId])`, `@@index([taskId])` — speeds up relationship query joins.
+
+---
+
 ## 🔗 Architecture & API Reference Links
 
 *   To inspect structural diagrams of component topologies: [docs/system-design.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/system-design.md)

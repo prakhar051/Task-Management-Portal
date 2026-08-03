@@ -108,6 +108,10 @@ model Employee {
   taskAssignments    TaskAssignee[]
   taskComments       TaskComment[]
   uploadedAttachments TaskAttachment[] @relation("UploaderAttachments")
+  leaves             Leave[]          @relation("EmployeeLeaves")
+  approvedLeaves     Leave[]          @relation("ApprovedLeaves")
+  calendarEvents     CalendarEvent[]  @relation("EmployeeEvents")
+  recurringEvents    RecurringEvent[]
 
   @@index([employeeCode])
   @@index([email])
@@ -208,6 +212,7 @@ model Project {
   manager      Employee?       @relation("ProjectManager", fields: [managerId], references: [id], onDelete: SetNull)
   members      ProjectMember[]
   tasks        Task[]          @relation("ProjectTasks")
+  calendarEvents CalendarEvent[] @relation("ProjectEvents")
 
   @@index([code])
   @@index([status])
@@ -295,6 +300,7 @@ model Task {
   dependencies         TaskDependency[] @relation("TaskDependent")
   blockedTasks         TaskDependency[] @relation("TaskBlocked")
   labels               TaskLabel[]      @relation("TaskLabels")
+  calendarEvents       CalendarEvent[]  @relation("TaskEvents")
 
   @@index([taskCode])
   @@index([status])
@@ -486,5 +492,129 @@ model ActivityLog {
   @@index([createdAt])
   @@map("activity_logs")
 }
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum LeaveType {
+  CASUAL
+  SICK
+  PAID
+  UNPAID
+  MATERNITY
+  PATERNITY
+}
+
+enum CalendarEventType {
+  TASK
+  PROJECT
+  MEETING
+  HOLIDAY
+  LEAVE
+  CUSTOM
+}
+
+model Leave {
+  id              String      @id @default(uuid())
+  employeeId      String
+  type            LeaveType
+  startDate       DateTime
+  endDate         DateTime
+  reason          String
+  status          LeaveStatus @default(PENDING)
+  approvedById    String?
+  rejectionReason String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  employee        Employee    @relation("EmployeeLeaves", fields: [employeeId], references: [id], onDelete: Cascade)
+  approvedBy      Employee?   @relation("ApprovedLeaves", fields: [approvedById], references: [id], onDelete: SetNull)
+  calendarEvents  CalendarEvent[] @relation("LeaveEvents")
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+  @@map("leaves")
+}
+
+model CalendarEvent {
+  id               String            @id @default(uuid())
+  title            String
+  description      String?
+  type             CalendarEventType
+  startDate        DateTime
+  endDate          DateTime
+  isAllDay         Boolean           @default(false)
+  employeeId       String?
+  projectId        String?
+  taskId           String?
+  leaveId          String?
+  holidayId        String?
+  recurringEventId String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  employee         Employee?         @relation("EmployeeEvents", fields: [employeeId], references: [id], onDelete: Cascade)
+  project          Project?          @relation("ProjectEvents", fields: [projectId], references: [id], onDelete: Cascade)
+  task             Task?             @relation("TaskEvents", fields: [taskId], references: [id], onDelete: Cascade)
+  leave            Leave?            @relation("LeaveEvents", fields: [leaveId], references: [id], onDelete: Cascade)
+  holiday          Holiday?          @relation("HolidayEvents", fields: [holidayId], references: [id], onDelete: Cascade)
+  recurringEvent   RecurringEvent?   @relation("RecurringEventOccurrences", fields: [recurringEventId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([projectId])
+  @@index([taskId])
+  @@index([leaveId])
+  @@index([holidayId])
+  @@index([recurringEventId])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([type])
+  @@map("calendar_events")
+}
+
+model Holiday {
+  id             String          @id @default(uuid())
+  name           String
+  date           DateTime
+  isGlobal       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  // Relations
+  calendarEvents CalendarEvent[] @relation("HolidayEvents")
+
+  @@index([date])
+  @@map("holidays")
+}
+
+model RecurringEvent {
+  id                String            @id @default(uuid())
+  title             String
+  description       String?
+  type              CalendarEventType
+  startDate         DateTime
+  endDate           DateTime
+  recurrenceRule    String            // 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'
+  recurrenceEndDate DateTime?
+  employeeId        String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Relations
+  employee          Employee?         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  occurrences       CalendarEvent[]   @relation("RecurringEventOccurrences")
+
+  @@index([employeeId])
+  @@map("recurring_events")
+}
+
 
 

@@ -195,7 +195,17 @@ Phase 9 implements an enterprise-grade analytics dashboard and document generato
 
 ---
 
-## 🚀 10. Deployment Strategies
+## 📅 10. Calendar, Scheduling & Leave Management Module (Phase 10)
+
+Phase 10 implements a complete Calendar and Leaves approval workflows engine:
+1.  **Unified Events Merging Feed**: The calendar feed aggregates events dynamically from `CalendarEvent`, `Holiday`, `Task` (due dates), and `Project` (milestones) tables, compiling them on-the-fly into a single unified JSON model shape.
+2.  **Date Overlaps Verification**: Validates requests before creation to prevent overlapping approved leaves for the same employee.
+3.  **Lazy Recurring Events Engine**: Supports DAILY, WEEKLY, MONTHLY, and YEARLY recurrences, lazily pre-generating future occurrence items up to 3 months ahead by default.
+4.  **Draggable Event DB Updates**: Coordinates drag-and-drop actions. When task due dates or project milestones are dragged, backend updates update the original task and project records in the database.
+
+---
+
+## 🚀 11. Deployment Strategies
 
 The system utilizes a fully automated, cloud-based Continuous Integration and Deployment (CI/CD) setup:
 *   **Frontend Client**: Hosted on **Vercel** with custom rewrite configurations to route SPA links safely to index.html.
@@ -206,13 +216,13 @@ Refer to [docs/installation-deployment.md](file:///c:/Resume%20Project/Task%20Ma
 
 ---
 
-## 📊 11. Challenges, Retrospective & Lessons Learned
+## 📊 12. Challenges, Retrospective & Lessons Learned
 
-### 11.1 Technical Challenges & Mitigations
+### 12.1 Technical Challenges & Mitigations
 *   **Asynchronous Database Bottlenecks**: High concurrent requests to foreign keys led to performance drops. Mitigation involved introducing pooled connections and indexing relationships.
 *   **Stateless Token Expiry UX**: Standard token lifespans disrupted user sessions mid-use. Resolved by using client-side Axios refresh interceptors to extend sessions silently.
 
-### 11.2 Engineering Learning Outcomes
+### 12.2 Engineering Learning Outcomes
 The implementation of the Task Management Portal provided hands-on experience in:
 *   Relational database normalizations and performance indexing.
 *   Building security middleware stacks in Express.js.

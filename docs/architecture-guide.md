@@ -447,6 +447,21 @@ The frontend uses code-split pages (`Analytics.jsx`, `Reports.jsx`) loaded lazil
 
 ---
 
+## 📅 10. Calendar & Leave Management Architecture (Phase 10)
+
+Phase 10 designs a unified calendar event aggregator and employee leaves approval workflows:
+
+### 10.1 Unified Event Compilation Feed
+The `CalendarService` aggregates records dynamically from multiple database tables (`CalendarEvent`, `Holiday`, `Task`, and `Project`) and formats them into a single, cohesive shape before returning them. This prevents duplication and avoids loading separate lists into frontend components.
+
+### 10.2 Lazy Recurrent Scheduler
+The recurrence rules (Daily, Weekly, Monthly, Yearly) are processed on-the-fly inside the service. New occurrences are batch-inserted into the `CalendarEvent` table with a max 3 months boundary to protect server memory.
+
+### 10.3 Draggable State Synchronizations
+Custom meetings, task deadlines, and project milestones are draggable. Drag operations trigger backend updates (`handleDragDrop`) which synchronize date changes directly back to the original entities (updating Task due dates or Project end dates in the database).
+
+---
+
 ## 🔗 Internal Configuration References
 
 To understand how these directories and patterns connect to installation, security, and schema designs:

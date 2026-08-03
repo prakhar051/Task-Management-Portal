@@ -28,6 +28,7 @@ Explore the deep technical implementation and design choices behind this project
 | **📋 Retrospective** | Challenges, engineering learnings, and 15+ future enhancements | [docs/post-mortem.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/post-mortem.md) |
 | **🔔 Notifications & Logs** | Notification triggers, preferences subscription settings, and audit logs | [docs/notifications-activities.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/notifications-activities.md) |
 | **📈 Analytics & Reports** | Server-side aggregates, cache wrappers, XLSX & PDF generators | [docs/analytics-reports.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/analytics-reports.md) |
+| **📅 Calendar & Leaves** | Unified feed, recurrence engines, leave workflows, drag-drop updates | [docs/calendar-module.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/calendar-module.md) |
 
 ---
 
