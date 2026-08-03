@@ -8,9 +8,11 @@ import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import LoadingSpinner from './components/common/LoadingSpinner';
 
-// Lazy load employee components to optimize chunk splitting
+// Lazy load dynamic import components to code-split bundles
 const Employees = lazy(() => import('./pages/Employees'));
 const EmployeeDetails = lazy(() => import('./pages/EmployeeDetails'));
+const Departments = lazy(() => import('./pages/Departments'));
+const DepartmentDetails = lazy(() => import('./pages/DepartmentDetails'));
 
 function App() {
   return (
@@ -60,6 +62,37 @@ function App() {
                   </div>
                 }>
                   <EmployeeDetails />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Department module paths */}
+          <Route
+            path="departments"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Departments />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="departments/:id"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <DepartmentDetails />
                 </Suspense>
               </ProtectedRoute>
             }

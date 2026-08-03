@@ -33,6 +33,7 @@ Explore the deep technical implementation and design choices behind this project
 
 *   **🔒 Secure Role-Based Authentication**: Secure registration and login using short-lived in-memory JWT Access Tokens, secure HttpOnly cookie-based Refresh Tokens with rotation, and distinct ADMIN, MANAGER, and EMPLOYEE role authorization tiers.
 *   **👥 Collaborative Employee Directory**: Complete employee profile management supporting soft deletes, restores, local Multer avatar uploads, paginated searches, bulk update status controls, and CSV/Excel roster exports.
+*   **🏢 Collaborative Department Management**: Roster creations, office location parameters, managers assignments, employee allocations, bulk actions, search filters, and statistics analytics dashboard.
 *   **📋 Rich Task Lifecycle Management**: Complete CRUD operations on tasks. Filter tasks by category, priority (Low, Medium, High), status (To-Do, In-Progress, Completed), or search query.
 *   **👥 Dynamic Collaborative Assignment**: Admin interface to dynamically assign tasks to team members with real-time logging of updates.
 *   **📊 Interactive Dashboard Analytics**: Rich responsive Recharts visual components (Pie, Doughnut, Bar, Line, Area) presenting status distribution, priorities, performance graphs, and debounced search filters.

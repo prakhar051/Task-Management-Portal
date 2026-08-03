@@ -7,6 +7,7 @@ import path from 'path';
 import authRoutes from './routes/auth.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import employeeRoutes from './routes/employee.routes.js';
+import departmentRoutes from './routes/department.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 // Load environmental variables
@@ -49,6 +50,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/departments', departmentRoutes);
 
 // Global 404 handler for unmatched routes
 app.use(notFoundHandler);

@@ -249,6 +249,58 @@ Employees (page)
 └── EmployeePagination (footer offset navigator page controls)
 ```
 
+## 🏢 6. Department Management Architecture & Workflows
+
+The Department Module expands the system design by incorporating multi-relational database transaction scopes.
+
+### 6.1 Transaction-Safe Assignments Repository (Backend)
+To map manager assignments securely, a database `$transaction` block handles clearing existing assignments and mapping new linkages:
+```javascript
+// src/repositories/department.repository.js
+static async assignManager(id, managerId, updatedById) {
+  return prisma.$transaction(async (tx) => {
+    // Enforce ONE department managed at a time
+    if (managerId) {
+      await tx.department.updateMany({
+        where: { managerId, id: { not: id }, isDeleted: false },
+        data: { managerId: null }
+      });
+    }
+    // Update target department manager
+    const department = await tx.department.update({
+      where: { id },
+      data: { managerId, updatedById }
+    });
+    // Ensure manager's department ID is updated
+    if (managerId) {
+      await tx.employee.update({
+        where: { id: managerId },
+        data: { departmentId: id }
+      });
+    }
+    return department;
+  });
+}
+```
+
+### 6.2 Frontend Page & Modal Architecture
+The layout incorporates code-split page views and modals:
+```
+Departments (page)
+│
+├── DepartmentToolbar (coordinates search input and action triggers)
+│
+├── DepartmentStatistics (renders global metrics aggregate panels)
+│
+├── BulkActionToolbar (actions selector for status/delete operations)
+│
+└── DepartmentTable (registers items grid)
+```
+
+Inside the Department Details view, sub-modals handle assignments:
+*   `ManagerAssignmentModal`: Renders active employees select list, updating manager ID configurations.
+*   `EmployeeAssignmentModal`: Renders checklist grids, linking multiple employees to the department in a single patch call.
+
 ---
 
 ## 🔗 Internal Configuration References

@@ -950,6 +950,279 @@ Downloads employee records as file download blocks.
 
 ---
 
+## 🏢 8. Department Endpoints
+
+### 8.1 List Departments (Paginated & Filtered)
+Queries department roster directory.
+*   **Method**: `GET`
+*   **Path**: `/departments`
+*   **Access Control**: Authenticated (ADMIN, MANAGER, or Owner EMPLOYEE)
+*   **Query Parameters**:
+    *   `page` (optional, default: `1`)
+    *   `limit` (optional, default: `10`)
+    *   `search` (optional)
+    *   `status` (optional: `ACTIVE | INACTIVE`)
+    *   `location` (optional)
+    *   `isDeleted` (optional, default: `false` - set to `true` to view trash)
+    *   `sortBy` (optional: `name | employeeCount | createdAt | updatedAt`)
+    *   `sortOrder` (optional, `asc` | `desc`)
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Departments retrieved successfully.",
+          "data": [
+            {
+              "id": "dept_01a02b03c04d05e0",
+              "name": "Engineering",
+              "code": "ENG",
+              "description": "Software products delivery",
+              "location": "Building A, Floor 3",
+              "email": "eng@company.com",
+              "phone": "555-019-2834",
+              "status": "ACTIVE",
+              "manager": {
+                "id": "emp_111",
+                "firstName": "John",
+                "lastName": "Doe"
+              },
+              "_count": {
+                "employees": 12
+              }
+            }
+          ],
+          "pagination": {
+            "page": 1,
+            "limit": 10,
+            "total": 1,
+            "pages": 1
+          }
+        }
+        ```
+
+---
+
+### 8.2 Get Department By ID
+Fetches details of a single department.
+*   **Method**: `GET`
+*   **Path**: `/departments/:id`
+*   **Access Control**: Authenticated (ADMIN, MANAGER, or Owner EMPLOYEE)
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Department details retrieved successfully.",
+          "data": {
+            "id": "dept_01a02b03c04d05e0",
+            "name": "Engineering",
+            "code": "ENG",
+            "description": "Software products delivery",
+            "location": "Building A, Floor 3",
+            "email": "eng@company.com",
+            "phone": "555-019-2834",
+            "status": "ACTIVE",
+            "manager": {
+              "id": "emp_111",
+              "firstName": "John",
+              "lastName": "Doe"
+            },
+            "_count": {
+              "employees": 12
+            }
+          }
+        }
+        ```
+
+---
+
+### 8.3 Create Department
+Creates a new department record.
+*   **Method**: `POST`
+*   **Path**: `/departments`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "name": "Engineering",
+      "code": "ENG",
+      "location": "Building A, Floor 3",
+      "email": "eng@company.com",
+      "phone": "555-019-2834",
+      "status": "ACTIVE"
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `201 Created`
+        ```json
+        {
+          "success": true,
+          "message": "Department created successfully.",
+          "data": {
+            "id": "dept_01a02b03c04d05e0",
+            "name": "Engineering",
+            "code": "ENG"
+          }
+        }
+        ```
+
+---
+
+### 8.4 Update Department Details
+Edits metadata attributes.
+*   **Method**: `PATCH`
+*   **Path**: `/departments/:id`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "location": "Building C, Floor 4"
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Department updated successfully."
+        }
+        ```
+
+---
+
+### 8.5 Soft Delete Department
+Moves department to trash and dissociates active manager/employee department ids.
+*   **Method**: `DELETE`
+*   **Path**: `/departments/:id`
+*   **Access Control**: Admin Only
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Department soft deleted successfully."
+        }
+        ```
+
+---
+
+### 8.6 Restore Department
+Restores a soft-deleted department.
+*   **Method**: `PATCH`
+*   **Path**: `/departments/:id/restore`
+*   **Access Control**: Admin Only
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Department restored successfully."
+        }
+        ```
+
+---
+
+### 8.7 Assign Department Manager
+Maps managing employee to department, enforcing "one manager per department" rule.
+*   **Method**: `PATCH`
+*   **Path**: `/departments/:id/manager`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "managerId": "emp_111"
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Department manager assigned successfully."
+        }
+        ```
+
+---
+
+### 8.8 Get Department Employees
+Lists employees mapped to department.
+*   **Method**: `GET`
+*   **Path**: `/departments/:id/employees`
+*   **Access Control**: Authenticated (ADMIN, MANAGER, or Owner EMPLOYEE)
+*   **Response Payload**: Array of Employee records.
+
+---
+
+### 8.9 Allocate Employees to Department
+Assigns multiple employees to department (bulk mapping).
+*   **Method**: `PATCH`
+*   **Path**: `/departments/:id/employees`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "employeeIds": ["emp_111", "emp_222"]
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Employees assigned to department successfully."
+        }
+        ```
+
+---
+
+### 8.10 Get General Department Statistics
+Generates overall roster statistics.
+*   **Method**: `GET`
+*   **Path**: `/departments/statistics`
+*   **Access Control**: Authenticated (ADMIN, MANAGER)
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "data": {
+            "totalDepartments": 4,
+            "activeDepartments": 3,
+            "inactiveDepartments": 1,
+            "totalEmployees": 40,
+            "activeEmployees": 35,
+            "largestDepartment": "Engineering",
+            "smallestDepartment": "Marketing",
+            "averageEmployeesPerDepartment": "10.0",
+            "managerAssigned": 2,
+            "departmentsWithoutManagers": 2,
+            "openPositions": 15
+          }
+        }
+        ```
+
+---
+
+### 8.11 Bulk Operations (Soft Delete, Status, Restore)
+Admin tool actions:
+*   `DELETE /departments/bulk` -> body `{ ids: [UUID] }`
+*   `PATCH /departments/bulk-status` -> body `{ ids: [UUID], status: "ACTIVE" }`
+*   `PATCH /departments/bulk-restore` -> body `{ ids: [UUID] }`
+
+---
+
+### 8.12 Export Departments
+Downloads CSV or XLSX files.
+*   **Method**: `GET`
+*   **Path**: `/departments/export`
+*   **Access Control**: Authenticated (ADMIN, MANAGER)
+*   **Query Parameters**:
+    *   `format` (`csv` | `xlsx`)
+*   **Response Payload**: CSV Text string data.
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)

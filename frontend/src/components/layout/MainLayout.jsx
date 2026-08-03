@@ -15,13 +15,13 @@ export default function MainLayout() {
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: '📊', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
     { name: 'Employees', path: '/employees', icon: '👥', roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Departments', path: '#departments', icon: '🏢', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
+    { name: 'Departments', path: '/departments', icon: '🏢', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
     { name: 'Projects', path: '#projects', icon: '📂', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
     { name: 'Tasks', path: '#tasks', icon: '📋', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] }
   ].filter((link) => link.roles.includes(user.role));
 
   return (
-    <div className="min-h-screen flex bg-slateDark-950 text-slateDark-100">
+    <div className="min-h-screen flex bg-slateDark-950 text-slateDark-100 select-none">
       {/* Sidebar navigation panel */}
       <aside className="w-64 glass border-r border-slateDark-800 flex flex-col justify-between hidden md:flex animate-fade-in">
         <div>

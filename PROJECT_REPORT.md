@@ -83,13 +83,15 @@ For a comprehensive review of the structural interactions, data flow, and compon
 
 ## 🗄️ 4. Relational Database Design
 
-The database schema is designed to enforce relational integrity and third normal form (3NF). Data persistence is structured around the primary entities: `User`, `Employee`, `Session`, `AuthLog`, `Task`, `Category`, and `ActivityLog`.
+The database schema is designed to enforce relational integrity and third normal form (3NF). Data persistence is structured around the primary entities: `User`, `Employee`, `Department`, `Session`, `AuthLog`, `Task`, `Category`, and `ActivityLog`.
 
 ```mermaid
 erDiagram
     USER ||--o| EMPLOYEE : "profile"
     USER ||--o{ SESSION : "sessions"
     USER ||--o{ AUTH_LOG : "authLogs"
+    DEPARTMENT ||--o{ EMPLOYEE : "employees"
+    DEPARTMENT ||--o| EMPLOYEE : "manager"
     USER ||--o{ TASK : "assignee"
     USER ||--o{ ACTIVITY_LOG : "triggers"
     CATEGORY ||--o{ TASK : "classifies"
@@ -99,6 +101,7 @@ erDiagram
 To support rapid read queries on filters, indexes are applied to the primary relation keys:
 *   `assigneeId` and `categoryId` on `Task`
 *   `employeeCode`, `email`, `status`, and `managerId` on `Employee`
+*   `code`, `status`, `managerId`, and `createdAt` on `Department`
 
 For the complete schema code and normalization breakdown, view the [docs/database-design.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/database-design.md) document.
 
@@ -111,15 +114,17 @@ The client application is built as a single-page application using **React Route
 *   **Custom Axios Client Interceptor**: Intercepts outgoing requests to append in-memory access tokens and dynamically catches `401 Unauthorized` responses to execute silent refresh token rotations, retrying failed requests.
 *   **Zustand Auth Store**: Client-side state manager handling authentication status, user profile details, loading spinners, and access tokens in memory to prevent XSS leakage.
 *   **Zustand Employee Store**: Centralizes listing state, paginated indices, active query filters, selection lists, and download triggers for CSV reports.
+*   **Zustand Department Store**: Manages directory state, pagination filters, bulk operation selected IDs, manager assignment, and workforce allocation arrays.
 *   **Recharts Data Visualization**: Implements responsive canvas-based charts mapping status distributions (Pie), priority groups (Doughnut), performance vectors (Area), and completion history (Line/Bar) with clean Tooltip hover states.
-*   **Code Splitting & Suspense**: Utilizes `React.lazy()` dynamic page imports to split `Employees` and `EmployeeDetails` views into standalone bundles, reducing initial client-side footprint.
+*   **Code Splitting & Suspense**: Utilizes `React.lazy()` dynamic page imports to split `Employees`, `EmployeeDetails`, `Departments`, and `DepartmentDetails` views into standalone bundles, reducing initial client-side footprint.
 *   **Tailwind CSS UI**: Modern dark-theme styled components using glassmorphic cards, CSS flex grids, backdrop filters, and Framer Motion hover animations.
 
 ### 5.2 Backend API (Node.js/Express.js)
 The backend is structured using the **Controller-Service-Repository** pattern to isolate routing, business validation, and database operations.
 *   **Middleware Pipeline**: Incoming requests pass through Helmet (header security), CORS configurations, Express-rate-limiters, and Zod validator schemas before routing.
 *   **Multer Static Uploader & Serving**: Serves avatar images locally via dynamic disk storage configurations, restricting file types to PNG/JPEG/WEBP and sizes under 2MB.
-*   **Repository Query Layer**: Decouples services from Prisma ORM, consolidating queries inside an `EmployeeRepository` class.
+*   **Repository Query Layer**: Decouples services from Prisma ORM, consolidating queries inside an `EmployeeRepository` and `DepartmentRepository` class.
+*   **Database Transactions**: Enforces manager/employee mapping assignments using transaction blocks (`prisma.$transaction`) to keep relation links synchronized in a single roundtrip.
 *   **Dual-Token Handshake**: Implements validation of stateless short-lived access tokens via authorization headers and session-rotated refresh tokens via HttpOnly cookies.
 *   **Dashboard Aggregates Service**: Exposes metrics endpoints returning role-filtered statistics cards, active notification alerts, activity logs, and charting datasets. The services utilize mock adapters in early development to decouple database dependencies.
 

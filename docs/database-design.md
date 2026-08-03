@@ -161,38 +161,77 @@ model AuthLog {
 }
 
 model Employee {
-  id           String         @id @default(uuid())
-  employeeCode String         @unique
-  userId       String?        @unique
-  firstName    String
-  lastName     String
-  email        String         @unique
-  phone        String
-  designation  String
-  departmentId String?        // Nullable - future ready
-  managerId    String?        // Nullable
-  hireDate     DateTime
-  avatar       String?
-  status       EmployeeStatus @default(ACTIVE)
-  isDeleted    Boolean        @default(false)
-  deletedAt    DateTime?
+  id                 String         @id @default(uuid())
+  employeeCode       String         @unique
+  userId             String?        @unique
+  firstName          String
+  lastName           String
+  email              String         @unique
+  phone              String
+  designation        String
+  departmentId       String?        
+  managerId          String?        // Nullable
+  hireDate           DateTime
+  avatar             String?
+  status             EmployeeStatus @default(ACTIVE)
+  isDeleted          Boolean        @default(false)
+  deletedAt          DateTime?
   
   // Audit properties
-  createdById  String?
-  updatedById  String?
-  deletedById  String?
+  createdById        String?
+  updatedById        String?
+  deletedById        String?
   
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 
   // Relations
-  user         User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user               User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  department         Department?    @relation("DepartmentEmployees", fields: [departmentId], references: [id], onDelete: SetNull)
+  managedDepartments Department[]   @relation("DepartmentManager")
 
   @@index([employeeCode])
   @@index([email])
   @@index([status])
   @@index([managerId])
   @@map("employees")
+}
+
+enum DepartmentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Department {
+  id           String           @id @default(uuid())
+  name         String           @unique
+  code         String           @unique
+  description  String?
+  managerId    String?          // Links to Employee.id (Nullable)
+  location     String
+  email        String
+  phone        String
+  status       DepartmentStatus @default(ACTIVE)
+  isDeleted    Boolean          @default(false)
+  deletedAt    DateTime?
+
+  // Audit Fields
+  createdById  String?
+  updatedById  String?
+  deletedById  String?
+
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  // Relations
+  employees    Employee[]       @relation("DepartmentEmployees")
+  manager      Employee?        @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+
+  @@index([code])
+  @@index([status])
+  @@index([managerId])
+  @@index([createdAt])
+  @@map("departments")
 }
 ```
 
@@ -206,10 +245,13 @@ Database lookups can slow down as transaction tables scale. The schema applies d
     *   `@@index([userId])` on the `sessions` table. Prevents table-scans when verifying current sessions.
     *   `@@index([userId])` on the `auth_logs` table. Enhances log tracking queries.
     *   `@@index([managerId])` on the `employees` table. Speeds up managers reading their team lists.
+    *   `@@index([managerId])` on the `departments` table. Speeds up manager lookup listings.
+    *   `@@index([createdAt])` on the `departments` table. Speeds up pagination ordering.
 2.  **Unique Indexes**:
-    *   Prisma automatically configures native unique indexes on `User(email)`, `Employee(email)`, and `Employee(employeeCode)`. This speeds up verification checks during signup actions and unique code lookups.
+    *   Prisma automatically configures native unique indexes on `User(email)`, `Employee(email)`, `Employee(employeeCode)`, `Department(email)`, `Department(name)`, and `Department(code)`. This speeds up verification checks during signup actions and unique code lookups.
 3.  **Filtered Search Indexes**:
     *   `@@index([status])` on the `employees` table. Speeds up rendering stats filtered by ACTIVE or ON_LEAVE states.
+    *   `@@index([code])` and `@@index([status])` on the `departments` table. Speeds up filter scans.
 
 ---
 
