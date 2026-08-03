@@ -174,7 +174,18 @@ Refer to [docs/testing-performance.md](file:///c:/Resume%20Project/Task%20Manage
 
 ---
 
-## 🚀 8. Deployment Strategies
+## 🔔 8. Notifications & Activity Logging System
+
+The system integrates a real-time, non-blocking notification delivery engine and a persistent audit log tracker:
+1. **Asynchronous Non-Blocking Execution**: To prevent database logging operations from delaying business critical actions (such as updating task status or creating project entries), notification and logging queries are executed in isolated, fail-safe try-catch scopes.
+2. **Context Storage Hook (`AsyncLocalStorage`)**: Express middleware resolves request-level parameters (IP Address, User Agent, active user ID) and persists them inside node's `AsyncLocalStorage`. The logging layer extracts these attributes automatically.
+3. **Fine-grained RBAC and Department Scoping**: Audit log lookups are scoped by user role. Admins see all logs, managers see only logs relating to employees within their department, and employees are restricted to their own actions.
+
+For detailed sequence diagrams and database design documentation, consult [docs/notifications-activities.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/notifications-activities.md).
+
+---
+
+## 🚀 9. Deployment Strategies
 
 The system utilizes a fully automated, cloud-based Continuous Integration and Deployment (CI/CD) setup:
 *   **Frontend Client**: Hosted on **Vercel** with custom rewrite configurations to route SPA links safely to index.html.
@@ -185,13 +196,13 @@ Refer to [docs/installation-deployment.md](file:///c:/Resume%20Project/Task%20Ma
 
 ---
 
-## 📊 9. Challenges, Retrospective & Lessons Learned
+## 📊 10. Challenges, Retrospective & Lessons Learned
 
-### 9.1 Technical Challenges & Mitigations
+### 10.1 Technical Challenges & Mitigations
 *   **Asynchronous Database Bottlenecks**: High concurrent requests to foreign keys led to performance drops. Mitigation involved introducing pooled connections and indexing relationships.
 *   **Stateless Token Expiry UX**: Standard token lifespans disrupted user sessions mid-use. Resolved by using client-side Axios refresh interceptors to extend sessions silently.
 
-### 9.2 Engineering Learning Outcomes
+### 10.2 Engineering Learning Outcomes
 The implementation of the Task Management Portal provided hands-on experience in:
 *   Relational database normalizations and performance indexing.
 *   Building security middleware stacks in Express.js.

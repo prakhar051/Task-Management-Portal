@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/db.js';
+import ActivityService from './activity.service.js';
 
 // Custom error class to represent API exceptions
 class APIError extends Error {
@@ -108,6 +109,13 @@ export class AuthService {
         ipAddress,
         userAgent
       });
+      await ActivityService.logActivity({
+        userId: null,
+        action: 'LOGIN',
+        entityType: 'USER',
+        entityId: 'anonymous',
+        description: `Failed login attempt for email: ${email}`
+      });
       throw new APIError('Invalid email or password.', 401);
     }
 
@@ -119,6 +127,13 @@ export class AuthService {
         status: 'FAILED',
         ipAddress,
         userAgent
+      });
+      await ActivityService.logActivity({
+        userId: user.id,
+        action: 'LOGIN',
+        entityType: 'USER',
+        entityId: user.id,
+        description: `Failed login attempt (incorrect password) for email: ${email}`
       });
       throw new APIError('Invalid email or password.', 401);
     }
@@ -144,6 +159,14 @@ export class AuthService {
       status: 'SUCCESS',
       ipAddress,
       userAgent
+    });
+
+    await ActivityService.logActivity({
+      userId: user.id,
+      action: 'LOGIN',
+      entityType: 'USER',
+      entityId: user.id,
+      description: `User ${user.email} logged in successfully`
     });
 
     return {
@@ -232,6 +255,13 @@ export class AuthService {
         status: 'SUCCESS',
         ipAddress,
         userAgent
+      });
+      await ActivityService.logActivity({
+        userId: session.userId,
+        action: 'LOGOUT',
+        entityType: 'USER',
+        entityId: session.userId,
+        description: 'User logged out and session terminated'
       });
     }
     return true;

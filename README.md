@@ -26,6 +26,7 @@ Explore the deep technical implementation and design choices behind this project
 | **🚀 Deploy & Install** | Setup commands for Windows/macOS/Linux, Neon/Vercel/Render guides | [docs/installation-deployment.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/installation-deployment.md) |
 | **🧪 Testing & Performance** | Postman scripts, database optimizations, code splitting, caching | [docs/testing-performance.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/testing-performance.md) |
 | **📋 Retrospective** | Challenges, engineering learnings, and 15+ future enhancements | [docs/post-mortem.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/post-mortem.md) |
+| **🔔 Notifications & Logs** | Notification triggers, preferences subscription settings, and audit logs | [docs/notifications-activities.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/notifications-activities.md) |
 
 ---
 
@@ -37,9 +38,10 @@ Explore the deep technical implementation and design choices behind this project
 *   **📂 Collaborative Project Track**: Complete project creation, department associations, manager mappings, transactional member assignments with customizable roles, timelines elapsed duration, progress bars, bulk actions, and CSV/Excel exports.
 *   **📋 Rich Task Lifecycle Management**: Complete task CRUD tracks, self-relational parent/sub-task hierarchies, blocker dependencies cycle BFS check, multiple assignees allocation, comments forum feed, local file uploader up to 10MB, and export CSV/Excel sheets.
 *   **📋 Drag and Drop Kanban board**: HTML5 board with TODO, IN_PROGRESS, IN_REVIEW, BLOCKED, and COMPLETED columns mapping status transitions.
+*   **🔔 Real-Time Notifications**: Unread counter badge, top-bar dropdown alert items, separate paginated feed list, bulk read/delete, and fine-grained subscription preference settings.
 *   **📊 Interactive Dashboard Analytics**: Rich responsive Recharts visual components (Pie, Doughnut, Bar, Line, Area) presenting status distribution, priorities, performance graphs, and debounced search filters.
 *   **📁 Custom Category Tagging**: Dynamic creation of task categories to isolate and group tasks by business initiatives.
-*   **🛡️ Robust Audit Logging**: Immutable activity logs tracking every status transition and task reassignment for compliance.
+*   **🛡️ Robust Audit Logging**: Asynchronous non-blocking activity logs tracking database actions, requests metadata, and JSON diff modifications via `AsyncLocalStorage`.
 
 ---
 

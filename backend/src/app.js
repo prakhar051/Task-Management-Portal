@@ -10,6 +10,9 @@ import employeeRoutes from './routes/employee.routes.js';
 import departmentRoutes from './routes/department.routes.js';
 import projectRoutes from './routes/project.routes.js';
 import taskRoutes from './routes/task.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import activityRoutes from './routes/activity.routes.js';
+import { contextMiddleware } from './middleware/context.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 // Load environmental variables
@@ -38,6 +41,9 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 // Parse request cookies
 app.use(cookieParser());
 
+// Enable context storage for non-blocking logging
+app.use(contextMiddleware);
+
 // Phase 1 Health API endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -55,6 +61,8 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/activity', activityRoutes);
 
 // Global 404 handler for unmatched routes
 app.use(notFoundHandler);

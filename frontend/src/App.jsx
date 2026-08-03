@@ -17,6 +17,8 @@ const Projects = lazy(() => import('./pages/Projects'));
 const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
 const Tasks = lazy(() => import('./pages/Tasks'));
 const TaskDetails = lazy(() => import('./pages/TaskDetails'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const ActivityLogs = lazy(() => import('./pages/ActivityLogs'));
 
 function App() {
   return (
@@ -159,6 +161,38 @@ function App() {
                   </div>
                 }>
                   <TaskDetails />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Notification module path */}
+          <Route
+            path="notifications"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Notifications />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Activity module path */}
+          <Route
+            path="activity"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <ActivityLogs />
                 </Suspense>
               </ProtectedRoute>
             }

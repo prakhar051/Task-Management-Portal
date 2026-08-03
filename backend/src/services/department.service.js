@@ -1,5 +1,7 @@
 import { DepartmentRepository } from '../repositories/department.repository.js';
 import { prisma } from '../config/db.js';
+import NotificationService from './notification.service.js';
+import ActivityService from './activity.service.js';
 
 export class DepartmentService {
   /**
@@ -122,7 +124,30 @@ export class DepartmentService {
       createdById: creatorId
     };
 
-    return await DepartmentRepository.create(data);
+    const department = await DepartmentRepository.create(data);
+
+    // Log Activity
+    await ActivityService.logActivity({
+      userId: creatorId,
+      action: 'CREATE',
+      entityType: 'DEPARTMENT',
+      entityId: department.id,
+      description: `Department ${department.name} (${department.code}) created`,
+      metadata: { before: null, after: department, changes: null }
+    });
+
+    // Notify System Creator
+    await NotificationService.createNotification({
+      userId: creatorId,
+      title: 'Department Created',
+      message: `Department ${department.name} (${department.code}) was created successfully.`,
+      type: 'DEPARTMENT_CREATED',
+      priority: 'LOW',
+      entityType: 'DEPARTMENT',
+      entityId: department.id
+    });
+
+    return department;
   }
 
   /**
@@ -153,7 +178,19 @@ export class DepartmentService {
       updatedById
     };
 
-    return await DepartmentRepository.update(id, data);
+    const updatedDept = await DepartmentRepository.update(id, data);
+
+    // Log update activity
+    await ActivityService.logActivity({
+      userId: updatedById,
+      action: 'UPDATE',
+      entityType: 'DEPARTMENT',
+      entityId: id,
+      description: `Department ${updatedDept.name} (${updatedDept.code}) updated`,
+      metadata: { before: department, after: updatedDept, changes: payload }
+    });
+
+    return updatedDept;
   }
 
   /**
@@ -164,7 +201,16 @@ export class DepartmentService {
     if (!department) {
       throw new Error('Department not found.');
     }
-    return await DepartmentRepository.softDelete(id, deletedById);
+    const result = await DepartmentRepository.softDelete(id, deletedById);
+    await ActivityService.logActivity({
+      userId: deletedById,
+      action: 'DELETE',
+      entityType: 'DEPARTMENT',
+      entityId: id,
+      description: `Department ${department.name} (${department.code}) soft deleted`,
+      metadata: { before: department, after: result, changes: null }
+    });
+    return result;
   }
 
   /**
@@ -175,7 +221,15 @@ export class DepartmentService {
     if (!department || !department.isDeleted) {
       throw new Error('Department not found or not in trash.');
     }
-    return await DepartmentRepository.restore(id);
+    const result = await DepartmentRepository.restore(id);
+    await ActivityService.logActivity({
+      action: 'RESTORE',
+      entityType: 'DEPARTMENT',
+      entityId: id,
+      description: `Department ${department.name} (${department.code}) restored`,
+      metadata: { before: department, after: result, changes: null }
+    });
+    return result;
   }
 
   /**
@@ -315,6 +369,14 @@ export class DepartmentService {
    * Export to CSV text buffer.
    */
   static async exportToCSV(filters, role, currentUserId) {
+    await ActivityService.logActivity({
+      userId: currentUserId,
+      action: 'EXPORT',
+      entityType: 'DEPARTMENT',
+      entityId: 'all',
+      description: 'Exported departments list to CSV'
+    });
+
     const whereConditions = {
       isDeleted: false
     };

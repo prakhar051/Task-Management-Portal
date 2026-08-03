@@ -33,6 +33,9 @@ model User {
   sessions     Session[]
   authLogs     AuthLog[]
   employee     Employee?
+  notifications Notification[] @relation("UserNotifications")
+  preferences  NotificationPreference? @relation("UserPreferences")
+  activities   ActivityLog[]  @relation("UserActivities")
 
   @@map("users")
 }
@@ -383,4 +386,105 @@ model TaskLabel {
 
   @@map("task_labels")
 }
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_UPDATED
+  TASK_COMPLETED
+  PROJECT_CREATED
+  PROJECT_UPDATED
+  EMPLOYEE_CREATED
+  DEPARTMENT_CREATED
+  COMMENT_ADDED
+  ATTACHMENT_ADDED
+  SYSTEM
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ActivityAction {
+  CREATE
+  UPDATE
+  DELETE
+  RESTORE
+  ASSIGN
+  UNASSIGN
+  LOGIN
+  LOGOUT
+  STATUS_CHANGE
+  COMMENT
+  UPLOAD
+  DOWNLOAD
+  EXPORT
+}
+
+model Notification {
+  id         String               @id @default(uuid())
+  userId     String
+  title      String
+  message    String
+  type       NotificationType
+  priority   NotificationPriority @default(MEDIUM)
+  entityType String
+  entityId   String
+  actionUrl  String?
+  isRead     Boolean              @default(false)
+  readAt     DateTime?
+  createdAt  DateTime             @default(now())
+
+  // Relations
+  user       User                 @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id              String  @id @default(uuid())
+  userId          String  @unique
+  email           Boolean @default(true)
+  inApp           Boolean @default(true)
+  taskAssigned    Boolean @default(true)
+  taskUpdated     Boolean @default(true)
+  taskCompleted   Boolean @default(true)
+  projectCreated  Boolean @default(true)
+  projectUpdated  Boolean @default(true)
+  commentAdded    Boolean @default(true)
+  attachmentAdded Boolean @default(true)
+
+  // Relations
+  user            User    @relation("UserPreferences", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model ActivityLog {
+  id          String         @id @default(uuid())
+  userId      String?
+  action      ActivityAction
+  entityType  String
+  entityId    String
+  description String
+  metadata    Json
+  ipAddress   String
+  userAgent   String
+  createdAt   DateTime       @default(now())
+
+  // Relations
+  user        User?          @relation("UserActivities", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
 

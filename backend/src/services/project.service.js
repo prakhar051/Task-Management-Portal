@@ -1,5 +1,7 @@
 import { ProjectRepository } from '../repositories/project.repository.js';
 import { prisma } from '../config/db.js';
+import NotificationService from './notification.service.js';
+import ActivityService from './activity.service.js';
 
 export class ProjectService {
   /**
@@ -192,11 +194,39 @@ export class ProjectService {
       progress = 100;
     }
 
-    return ProjectRepository.create({
+    const project = await ProjectRepository.create({
       ...data,
       progress,
       createdById
     });
+
+    // Log Activity
+    await ActivityService.logActivity({
+      userId: createdById,
+      action: 'CREATE',
+      entityType: 'PROJECT',
+      entityId: project.id,
+      description: `Project ${project.name} (${project.code}) created`,
+      metadata: { before: null, after: project, changes: null }
+    });
+
+    // Notify Project Manager
+    if (project.managerId) {
+      const managerEmp = await prisma.employee.findUnique({ where: { id: project.managerId } });
+      if (managerEmp && managerEmp.userId) {
+        await NotificationService.createNotification({
+          userId: managerEmp.userId,
+          title: 'Assigned as Project Manager',
+          message: `You have been assigned as the Project Manager for project ${project.name} (${project.code}).`,
+          type: 'PROJECT_CREATED',
+          priority: 'HIGH',
+          entityType: 'PROJECT',
+          entityId: project.id
+        });
+      }
+    }
+
+    return project;
   }
 
   /**
@@ -234,11 +264,39 @@ export class ProjectService {
       progress = 100;
     }
 
-    return ProjectRepository.update(id, {
+    const updatedProj = await ProjectRepository.update(id, {
       ...data,
       ...(progress !== undefined && { progress }),
       updatedById
     });
+
+    // Log update activity
+    await ActivityService.logActivity({
+      userId: updatedById,
+      action: 'UPDATE',
+      entityType: 'PROJECT',
+      entityId: id,
+      description: `Project ${updatedProj.name} (${updatedProj.code}) updated`,
+      metadata: { before: project, after: updatedProj, changes: data }
+    });
+
+    // Notify Project Manager
+    if (updatedProj.managerId) {
+      const managerEmp = await prisma.employee.findUnique({ where: { id: updatedProj.managerId } });
+      if (managerEmp && managerEmp.userId) {
+        await NotificationService.createNotification({
+          userId: managerEmp.userId,
+          title: 'Project Details Updated',
+          message: `The details for project ${updatedProj.name} (${updatedProj.code}) have been updated.`,
+          type: 'PROJECT_UPDATED',
+          priority: 'MEDIUM',
+          entityType: 'PROJECT',
+          entityId: id
+        });
+      }
+    }
+
+    return updatedProj;
   }
 
   /**
@@ -249,7 +307,16 @@ export class ProjectService {
     if (!project) {
       throw new Error('Project not found.');
     }
-    return ProjectRepository.softDelete(id, deletedById);
+    const result = await ProjectRepository.softDelete(id, deletedById);
+    await ActivityService.logActivity({
+      userId: deletedById,
+      action: 'DELETE',
+      entityType: 'PROJECT',
+      entityId: id,
+      description: `Project ${project.name} (${project.code}) soft deleted`,
+      metadata: { before: project, after: result, changes: null }
+    });
+    return result;
   }
 
   /**
@@ -260,7 +327,15 @@ export class ProjectService {
     if (!project) {
       throw new Error('Project not found.');
     }
-    return ProjectRepository.restore(id);
+    const result = await ProjectRepository.restore(id);
+    await ActivityService.logActivity({
+      action: 'RESTORE',
+      entityType: 'PROJECT',
+      entityId: id,
+      description: `Project ${project.name} (${project.code}) restored`,
+      metadata: { before: project, after: result, changes: null }
+    });
+    return result;
   }
 
   /**
@@ -281,14 +356,81 @@ export class ProjectService {
       }
     }
 
-    return ProjectRepository.assignManager(id, managerId, updatedById);
+    const result = await ProjectRepository.assignManager(id, managerId, updatedById);
+
+    // Log Activity
+    await ActivityService.logActivity({
+      userId: updatedById,
+      action: 'ASSIGN',
+      entityType: 'PROJECT',
+      entityId: id,
+      description: `Project manager updated for project ${project.name} (${project.code})`,
+      metadata: { before: project.managerId, after: managerId, changes: { managerId } }
+    });
+
+    // Notify Manager
+    if (managerId) {
+      const managerEmp = await prisma.employee.findUnique({ where: { id: managerId } });
+      if (managerEmp && managerEmp.userId) {
+        await NotificationService.createNotification({
+          userId: managerEmp.userId,
+          title: 'Assigned as Project Manager',
+          message: `You have been assigned as the Project Manager for project ${project.name} (${project.code}).`,
+          type: 'PROJECT_CREATED',
+          priority: 'HIGH',
+          entityType: 'PROJECT',
+          entityId: id
+        });
+      }
+    }
+
+    return result;
   }
 
   /**
    * Assign members.
    */
   static async assignMembers(id, members, updatedById) {
-    return ProjectRepository.assignMembers(id, members, updatedById);
+    const project = await ProjectRepository.findById(id);
+    if (!project) {
+      throw new Error('Project not found.');
+    }
+
+    const result = await ProjectRepository.assignMembers(id, members, updatedById);
+
+    // Log Activity
+    await ActivityService.logActivity({
+      userId: updatedById,
+      action: 'ASSIGN',
+      entityType: 'PROJECT',
+      entityId: id,
+      description: `Project members list updated for project ${project.name} (${project.code})`,
+      metadata: { before: project.members, after: members, changes: { members } }
+    });
+
+    // Notify newly assigned members
+    const employeeIds = members.map((m) => m.employeeId);
+    const employees = await prisma.employee.findMany({
+      where: { id: { in: employeeIds } },
+      select: { id: true, userId: true, firstName: true }
+    });
+
+    for (const emp of employees) {
+      const wasMember = project.members?.some((m) => m.employeeId === emp.id);
+      if (!wasMember && emp.userId) {
+        await NotificationService.createNotification({
+          userId: emp.userId,
+          title: 'Assigned to Project',
+          message: `You have been added as a member of project ${project.name} (${project.code}).`,
+          type: 'PROJECT_UPDATED',
+          priority: 'MEDIUM',
+          entityType: 'PROJECT',
+          entityId: id
+        });
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -470,6 +612,14 @@ export class ProjectService {
    * Export project list to CSV buffer stream.
    */
   static async exportProjectsCSV(user) {
+    await ActivityService.logActivity({
+      userId: user.id,
+      action: 'EXPORT',
+      entityType: 'PROJECT',
+      entityId: 'all',
+      description: 'Exported projects roster list to CSV'
+    });
+
     const where = { isDeleted: false };
 
     // Apply same RBAC filter as listing projects

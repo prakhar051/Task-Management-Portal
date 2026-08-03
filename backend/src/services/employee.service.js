@@ -1,5 +1,7 @@
 import { EmployeeRepository } from '../repositories/employee.repository.js';
 import { prisma } from '../config/db.js';
+import NotificationService from './notification.service.js';
+import ActivityService from './activity.service.js';
 
 export class EmployeeService {
   /**
@@ -138,7 +140,32 @@ export class EmployeeService {
       createdById: creatorId
     };
 
-    return await EmployeeRepository.create(data);
+    const employee = await EmployeeRepository.create(data);
+
+    // Log Creation Activity
+    await ActivityService.logActivity({
+      userId: creatorId,
+      action: 'CREATE',
+      entityType: 'EMPLOYEE',
+      entityId: employee.id,
+      description: `Employee profile ${employee.employeeCode} (${employee.firstName} ${employee.lastName}) created`,
+      metadata: { before: null, after: employee, changes: null }
+    });
+
+    // Notify Employee if their user account mapping is present
+    if (employee.userId) {
+      await NotificationService.createNotification({
+        userId: employee.userId,
+        title: 'Profile Created',
+        message: `Welcome to the team, ${employee.firstName}! Your employee profile has been created.`,
+        type: 'EMPLOYEE_CREATED',
+        priority: 'MEDIUM',
+        entityType: 'EMPLOYEE',
+        entityId: employee.id
+      });
+    }
+
+    return employee;
   }
 
   /**
@@ -177,7 +204,31 @@ export class EmployeeService {
       updatedById: currentUserId
     };
 
-    return await EmployeeRepository.update(id, data);
+    const updatedEmployee = await EmployeeRepository.update(id, data);
+
+    // Log update activity
+    await ActivityService.logActivity({
+      userId: currentUserId,
+      action: 'UPDATE',
+      entityType: 'EMPLOYEE',
+      entityId: id,
+      description: `Employee profile ${updatedEmployee.employeeCode} updated`,
+      metadata: { before: employee, after: updatedEmployee, changes: payload }
+    });
+
+    // Log status change if applicable
+    if (payload.status && payload.status !== employee.status) {
+      await ActivityService.logActivity({
+        userId: currentUserId,
+        action: 'STATUS_CHANGE',
+        entityType: 'EMPLOYEE',
+        entityId: id,
+        description: `Employee ${updatedEmployee.employeeCode} status changed from ${employee.status} to ${updatedEmployee.status}`,
+        metadata: { before: employee.status, after: updatedEmployee.status, changes: null }
+      });
+    }
+
+    return updatedEmployee;
   }
 
   /**
@@ -188,7 +239,16 @@ export class EmployeeService {
     if (!employee) {
       throw new Error('Employee profile not found.');
     }
-    return await EmployeeRepository.softDelete(id, deletedById);
+    const result = await EmployeeRepository.softDelete(id, deletedById);
+    await ActivityService.logActivity({
+      userId: deletedById,
+      action: 'DELETE',
+      entityType: 'EMPLOYEE',
+      entityId: id,
+      description: `Employee profile ${employee.employeeCode} soft deleted`,
+      metadata: { before: employee, after: result, changes: null }
+    });
+    return result;
   }
 
   /**
@@ -199,7 +259,15 @@ export class EmployeeService {
     if (!employee || !employee.isDeleted) {
       throw new Error('Employee profile not found or not in trash.');
     }
-    return await EmployeeRepository.restore(id);
+    const result = await EmployeeRepository.restore(id);
+    await ActivityService.logActivity({
+      action: 'RESTORE',
+      entityType: 'EMPLOYEE',
+      entityId: id,
+      description: `Employee profile ${employee.employeeCode} restored`,
+      metadata: { before: employee, after: result, changes: null }
+    });
+    return result;
   }
 
   /**
@@ -227,6 +295,14 @@ export class EmployeeService {
    * Generates a CSV export buffer string based on filters.
    */
   static async exportToCSV(filters, role, currentUserId) {
+    await ActivityService.logActivity({
+      userId: currentUserId,
+      action: 'EXPORT',
+      entityType: 'EMPLOYEE',
+      entityId: 'all',
+      description: 'Exported employees roster list to CSV'
+    });
+
     const whereConditions = {
       isDeleted: false
     };

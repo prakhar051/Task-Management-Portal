@@ -1,5 +1,7 @@
 import { TaskRepository } from '../repositories/task.repository.js';
 import { prisma } from '../config/db.js';
+import NotificationService from './notification.service.js';
+import ActivityService from './activity.service.js';
 
 export class TaskService {
   /**
@@ -323,12 +325,24 @@ export class TaskService {
       progress = 100;
     }
 
-    return TaskRepository.create({
+    const task = await TaskRepository.create({
       ...data,
       taskCode,
       completionPercentage: progress,
       createdById
     });
+
+    // Log Activity
+    await ActivityService.logActivity({
+      userId: createdById,
+      action: 'CREATE',
+      entityType: 'TASK',
+      entityId: task.id,
+      description: `Task ${task.taskCode} ("${task.title}") created`,
+      metadata: { before: null, after: task, changes: null }
+    });
+
+    return task;
   }
 
   /**
@@ -376,11 +390,41 @@ export class TaskService {
       progress = 100;
     }
 
-    return TaskRepository.update(id, {
+    const updatedTask = await TaskRepository.update(id, {
       ...data,
       ...(progress !== undefined && { completionPercentage: progress }),
       updatedById
     });
+
+    // Log Activity
+    await ActivityService.logActivity({
+      userId: updatedById,
+      action: 'UPDATE',
+      entityType: 'TASK',
+      entityId: id,
+      description: `Task ${updatedTask.taskCode} updated`,
+      metadata: { before: task, after: updatedTask, changes: data }
+    });
+
+    // Notify all task assignees
+    if (task.assignees) {
+      for (const a of task.assignees) {
+        if (a.employee?.userId && a.employee.userId !== user.id) {
+          await NotificationService.createNotification({
+            userId: a.employee.userId,
+            title: 'Task Details Updated',
+            message: `Task ${task.taskCode} ("${task.title}") has been updated.`,
+            type: 'TASK_UPDATED',
+            priority: 'MEDIUM',
+            entityType: 'TASK',
+            entityId: id,
+            actionUrl: `/tasks/${id}`
+          });
+        }
+      }
+    }
+
+    return updatedTask;
   }
 
   /**
@@ -402,11 +446,47 @@ export class TaskService {
       progress = 100;
     }
 
-    return TaskRepository.update(id, {
+    const updatedTask = await TaskRepository.update(id, {
       status,
       completionPercentage: progress,
       updatedById
     });
+
+    // Log Activity
+    await ActivityService.logActivity({
+      userId: updatedById,
+      action: 'STATUS_CHANGE',
+      entityType: 'TASK',
+      entityId: id,
+      description: `Task ${task.taskCode} status changed from ${task.status} to ${status}`,
+      metadata: { before: task.status, after: status, changes: { status } }
+    });
+
+    // Notify all task assignees
+    if (task.assignees) {
+      for (const a of task.assignees) {
+        if (a.employee?.userId && a.employee.userId !== user.id) {
+          const type = status === 'COMPLETED' ? 'TASK_COMPLETED' : 'TASK_UPDATED';
+          const title = status === 'COMPLETED' ? 'Task Completed' : 'Task Status Updated';
+          const message = status === 'COMPLETED'
+            ? `Task ${task.taskCode} ("${task.title}") has been marked COMPLETED.`
+            : `Task ${task.taskCode} ("${task.title}") status changed to ${status}.`;
+
+          await NotificationService.createNotification({
+            userId: a.employee.userId,
+            title,
+            message,
+            type,
+            priority: status === 'COMPLETED' ? 'HIGH' : 'MEDIUM',
+            entityType: 'TASK',
+            entityId: id,
+            actionUrl: `/tasks/${id}`
+          });
+        }
+      }
+    }
+
+    return updatedTask;
   }
 
   /**
@@ -428,7 +508,44 @@ export class TaskService {
    * Assign assignees.
    */
   static async assignAssignees(id, employeeIds) {
-    return TaskRepository.assignAssignees(id, employeeIds);
+    const task = await TaskRepository.findById(id);
+    if (!task) {
+      throw new Error('Task not found.');
+    }
+
+    const result = await TaskRepository.assignAssignees(id, employeeIds);
+
+    // Log Activity
+    await ActivityService.logActivity({
+      action: 'ASSIGN',
+      entityType: 'TASK',
+      entityId: id,
+      description: `Assigned task ${task.taskCode} assignees list`
+    });
+
+    // Notify newly assigned employees
+    const employees = await prisma.employee.findMany({
+      where: { id: { in: employeeIds } },
+      select: { id: true, userId: true }
+    });
+
+    for (const emp of employees) {
+      const wasAssigned = task.assignees?.some((a) => a.employeeId === emp.id);
+      if (!wasAssigned && emp.userId) {
+        await NotificationService.createNotification({
+          userId: emp.userId,
+          title: 'New Task Assigned',
+          message: `You have been assigned to task ${task.taskCode} ("${task.title}").`,
+          type: 'TASK_ASSIGNED',
+          priority: 'HIGH',
+          entityType: 'TASK',
+          entityId: id,
+          actionUrl: `/tasks/${id}`
+        });
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -459,7 +576,48 @@ export class TaskService {
     if (!task) {
       throw new Error('Task not found.');
     }
-    return TaskRepository.createComment(taskId, employeeId, comment);
+    const result = await TaskRepository.createComment(taskId, employeeId, comment);
+
+    // Log Activity
+    await ActivityService.logActivity({
+      action: 'COMMENT',
+      entityType: 'TASK',
+      entityId: taskId,
+      description: `Added comment to task ${task.taskCode}`
+    });
+
+    // Notify all task assignees and reporter (excluding commenting user)
+    const notifierIds = new Set();
+    if (task.assignees) {
+      task.assignees.forEach((a) => {
+        if (a.employee?.userId) notifierIds.add(a.employee.userId);
+      });
+    }
+    if (task.reporter?.userId) {
+      notifierIds.add(task.reporter.userId);
+    }
+
+    const commentingEmp = await prisma.employee.findUnique({ where: { id: employeeId } });
+    if (commentingEmp && commentingEmp.userId) {
+      notifierIds.delete(commentingEmp.userId);
+    }
+
+    const commenterName = commentingEmp ? `${commentingEmp.firstName} ${commentingEmp.lastName}` : 'Someone';
+
+    for (const userId of notifierIds) {
+      await NotificationService.createNotification({
+        userId,
+        title: 'New Comment Added',
+        message: `${commenterName} commented on task ${task.taskCode} ("${task.title}").`,
+        type: 'COMMENT_ADDED',
+        priority: 'LOW',
+        entityType: 'TASK',
+        entityId: taskId,
+        actionUrl: `/tasks/${taskId}`
+      });
+    }
+
+    return result;
   }
 
   static async updateComment(commentId, comment, employeeId) {
@@ -482,7 +640,38 @@ export class TaskService {
     if (!task) {
       throw new Error('Task not found.');
     }
-    return TaskRepository.createAttachment(taskId, fileName, filePath, fileType, uploadedById);
+    const result = await TaskRepository.createAttachment(taskId, fileName, filePath, fileType, uploadedById);
+
+    // Log Activity
+    await ActivityService.logActivity({
+      action: 'UPLOAD',
+      entityType: 'TASK',
+      entityId: taskId,
+      description: `Uploaded attachment "${fileName}" to task ${task.taskCode}`
+    });
+
+    // Notify all task assignees (excluding the uploader)
+    const uploaderEmp = await prisma.employee.findUnique({ where: { id: uploadedById } });
+    const uploaderName = uploaderEmp ? `${uploaderEmp.firstName} ${uploaderEmp.lastName}` : 'Someone';
+
+    if (task.assignees) {
+      for (const a of task.assignees) {
+        if (a.employee?.userId && a.employee.userId !== uploaderEmp?.userId) {
+          await NotificationService.createNotification({
+            userId: a.employee.userId,
+            title: 'New Attachment Uploaded',
+            message: `${uploaderName} uploaded "${fileName}" to task ${task.taskCode} ("${task.title}").`,
+            type: 'ATTACHMENT_ADDED',
+            priority: 'LOW',
+            entityType: 'TASK',
+            entityId: taskId,
+            actionUrl: `/tasks/${taskId}`
+          });
+        }
+      }
+    }
+
+    return result;
   }
 
   static async deleteAttachment(attachmentId, employeeId) {
@@ -494,11 +683,36 @@ export class TaskService {
   }
 
   static async softDeleteTask(id, deletedById) {
-    return TaskRepository.softDelete(id, deletedById);
+    const task = await TaskRepository.findById(id);
+    if (!task) {
+      throw new Error('Task not found.');
+    }
+    const result = await TaskRepository.softDelete(id, deletedById);
+    await ActivityService.logActivity({
+      userId: deletedById,
+      action: 'DELETE',
+      entityType: 'TASK',
+      entityId: id,
+      description: `Task ${task.taskCode} ("${task.title}") soft deleted`,
+      metadata: { before: task, after: result, changes: null }
+    });
+    return result;
   }
 
   static async restoreTask(id) {
-    return TaskRepository.restore(id);
+    const task = await TaskRepository.findById(id);
+    if (!task) {
+      throw new Error('Task not found.');
+    }
+    const result = await TaskRepository.restore(id);
+    await ActivityService.logActivity({
+      action: 'RESTORE',
+      entityType: 'TASK',
+      entityId: id,
+      description: `Task ${task.taskCode} ("${task.title}") restored`,
+      metadata: { before: task, after: result, changes: null }
+    });
+    return result;
   }
 
   /**
@@ -524,6 +738,14 @@ export class TaskService {
    * Export to CSV text buffer.
    */
   static async exportTasksCSV(user) {
+    await ActivityService.logActivity({
+      userId: user.id,
+      action: 'EXPORT',
+      entityType: 'TASK',
+      entityId: 'all',
+      description: 'Exported tasks roster list to CSV'
+    });
+
     const where = { isDeleted: false };
 
     // Apply RBAC filters

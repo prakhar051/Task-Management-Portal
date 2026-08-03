@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import NotificationBell from '../notifications/NotificationBell';
 
 export default function MainLayout() {
   const navigate = useNavigate();
@@ -17,7 +18,8 @@ export default function MainLayout() {
     { name: 'Employees', path: '/employees', icon: '👥', roles: ['ADMIN', 'MANAGER'] },
     { name: 'Departments', path: '/departments', icon: '🏢', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
     { name: 'Projects', path: '/projects', icon: '📂', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Tasks', path: '/tasks', icon: '📋', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] }
+    { name: 'Tasks', path: '/tasks', icon: '📋', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
+    { name: 'Activity Logs', path: '/activity', icon: '📜', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] }
   ].filter((link) => link.roles.includes(user.role));
 
   return (
@@ -91,9 +93,7 @@ export default function MainLayout() {
             </span>
           </div>
           <div className="flex items-center space-x-4">
-            <button className="p-2 text-slateDark-400 hover:text-white rounded-lg hover:bg-slateDark-900 transition-colors">
-              🔔
-            </button>
+            <NotificationBell />
             <Link to={`/employees/${user.employeeId || user.id}`} className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-xs font-bold text-white md:hidden">
               {user.name.charAt(0).toUpperCase()}
             </Link>
