@@ -3,26 +3,40 @@ import path from 'path';
 import fs from 'fs';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public/uploads/avatars');
+const ATTACHMENT_DIR = path.join(process.cwd(), 'public/uploads/attachments');
 
-// Ensure directory structure is present
+// Ensure directory structures are present
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
+if (!fs.existsSync(ATTACHMENT_DIR)) {
+  fs.mkdirSync(ATTACHMENT_DIR, { recursive: true });
+}
 
-// Configure Storage Engine
-const storage = multer.diskStorage({
+// Configure Storage Engine for Avatars
+const avatarStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
-    // Generate unique filename to prevent overwrites
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     cb(null, `avatar-${uniqueSuffix}${path.extname(file.originalname)}`);
   }
 });
 
+// Configure Storage Engine for Task Attachments
+const attachmentStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, ATTACHMENT_DIR);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    cb(null, `attachment-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
 // Configure upload constraints (MIME type restrictions and file size limit)
-const fileFilter = (req, file, cb) => {
+const avatarFileFilter = (req, file, cb) => {
   const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -31,13 +45,37 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+const attachmentFileFilter = (req, file, cb) => {
+  const allowedMimeTypes = [
+    'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+    'application/pdf',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/zip', 'application/x-zip-compressed',
+    'text/plain'
+  ];
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only images, PDF, Word, Excel, ZIP, and Text files are allowed.'), false);
+  }
+};
+
 export const uploadAvatarMiddleware = multer({
-  storage,
-  fileFilter,
+  storage: avatarStorage,
+  fileFilter: avatarFileFilter,
   limits: {
     fileSize: 2 * 1024 * 1024 // 2 MB size ceiling
   }
 }).single('avatar');
+
+export const uploadAttachmentMiddleware = multer({
+  storage: attachmentStorage,
+  fileFilter: attachmentFileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10 MB size ceiling
+  }
+}).single('attachment');
 
 /**
  * Enterprise Storage Service Abstraction
@@ -52,7 +90,6 @@ export class StorageService {
    */
   static saveFile(file) {
     if (!file) return null;
-    // Returns static file route path for express static server
     return `/uploads/avatars/${file.filename}`;
   }
 
@@ -64,7 +101,11 @@ export class StorageService {
     if (!fileUrl) return;
     try {
       const fileName = path.basename(fileUrl);
-      const filePath = path.join(UPLOAD_DIR, fileName);
+      let filePath = path.join(UPLOAD_DIR, fileName);
+      // Fallback check in attachments if not found in avatars
+      if (!fs.existsSync(filePath)) {
+        filePath = path.join(ATTACHMENT_DIR, fileName);
+      }
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
@@ -73,3 +114,4 @@ export class StorageService {
     }
   }
 }
+

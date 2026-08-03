@@ -15,6 +15,8 @@ const Departments = lazy(() => import('./pages/Departments'));
 const DepartmentDetails = lazy(() => import('./pages/DepartmentDetails'));
 const Projects = lazy(() => import('./pages/Projects'));
 const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const TaskDetails = lazy(() => import('./pages/TaskDetails'));
 
 function App() {
   return (
@@ -126,6 +128,37 @@ function App() {
                   </div>
                 }>
                   <ProjectDetails />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Task module paths */}
+          <Route
+            path="tasks"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Tasks />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="tasks/:id"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <TaskDetails />
                 </Suspense>
               </ProtectedRoute>
             }

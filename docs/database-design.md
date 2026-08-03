@@ -313,6 +313,159 @@ model ProjectMember {
   @@index([employeeId])
   @@map("project_members")
 }
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  BLOCKED
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskType {
+  FEATURE
+  BUG
+  IMPROVEMENT
+  DOCUMENTATION
+  RESEARCH
+}
+
+model Task {
+  id                   String           @id @default(uuid())
+  taskCode             String           @unique
+  title                String
+  description          String?
+  projectId            String
+  parentTaskId         String?
+  reporterId           String?          
+  status               TaskStatus       @default(TODO)
+  priority             TaskPriority     @default(MEDIUM)
+  type                 TaskType         @default(FEATURE)
+  dueDate              DateTime?
+  estimatedHours       Float?
+  actualHours          Float?
+  completionPercentage Int              @default(0)
+  isDeleted            Boolean          @default(false)
+  deletedAt            DateTime?
+
+  // Audit Fields
+  createdById          String?
+  updatedById          String?
+  deletedById          String?
+
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  // Relations
+  project              Project          @relation("ProjectTasks", fields: [projectId], references: [id], onDelete: Cascade)
+  parentTask           Task?            @relation("SubTasks", fields: [parentTaskId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subTasks             Task[]           @relation("SubTasks")
+  reporter             Employee?        @relation("ReporterTasks", fields: [reporterId], references: [id], onDelete: SetNull)
+  assignees            TaskAssignee[]
+  comments             TaskComment[]
+  attachments          TaskAttachment[]
+  dependencies         TaskDependency[] @relation("TaskDependent")
+  blockedTasks         TaskDependency[] @relation("TaskBlocked")
+  labels               TaskLabel[]      @relation("TaskLabels")
+
+  @@index([taskCode])
+  @@index([status])
+  @@index([priority])
+  @@index([projectId])
+  @@index([parentTaskId])
+  @@index([reporterId])
+  @@map("tasks")
+}
+
+model TaskAssignee {
+  id         String   @id @default(uuid())
+  taskId     String
+  employeeId String
+  assignedAt DateTime @default(now())
+
+  // Relations
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, employeeId])
+  @@index([taskId])
+  @@index([employeeId])
+  @@map("task_assignees")
+}
+
+model TaskDependency {
+  id              String   @id @default(uuid())
+  taskId          String
+  dependsOnTaskId String
+  createdAt       DateTime @default(now())
+
+  // Relations
+  task            Task     @relation("TaskDependent", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOnTask   Task     @relation("TaskBlocked", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, dependsOnTaskId])
+  @@index([taskId])
+  @@index([dependsOnTaskId])
+  @@map("task_dependencies")
+}
+
+model TaskComment {
+  id         String    @id @default(uuid())
+  taskId     String
+  employeeId String
+  comment    String
+  isDeleted  Boolean   @default(false)
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  task       Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([employeeId])
+  @@map("task_comments")
+}
+
+model TaskAttachment {
+  id           String   @id @default(uuid())
+  taskId       String
+  fileName     String
+  filePath     String
+  fileType     String
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  // Relations
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploader     Employee @relation("UploaderAttachments", fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([uploadedById])
+  @@map("task_attachments")
+}
+
+model TaskLabel {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  color     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tasks     Task[]   @relation("TaskLabels")
+
+  @@map("task_labels")
+}
 ```
 
 ---
@@ -329,13 +482,19 @@ Database lookups can slow down as transaction tables scale. The schema applies d
     *   `@@index([createdAt])` on the `departments` table. Speeds up pagination ordering.
     *   `@@index([departmentId])` and `@@index([managerId])` on the `projects` table. Speeds up filtering queries.
     *   `@@index([projectId])` and `@@index([employeeId])` on the `project_members` join table. Speeds up relational mapping scans.
+    *   `@@index([projectId])`, `@@index([parentTaskId])`, and `@@index([reporterId])` on the `tasks` table. Speeds up tree queries.
+    *   `@@index([taskId])` and `@@index([employeeId])` on `task_assignees` and `task_comments` tables.
+    *   `@@index([taskId])` and `@@index([dependsOnTaskId])` on the `task_dependencies` blocker table.
 2.  **Unique Indexes**:
-    *   Prisma automatically configures native unique indexes on `User(email)`, `Employee(email)`, `Employee(employeeCode)`, `Department(email)`, `Department(name)`, `Department(code)`, and `Project(code)`.
-    *   `@@unique([projectId, employeeId])` on `project_members` to enforce single mapping logic, preventing duplicate memberships.
+    *   Prisma automatically configures native unique indexes on `User(email)`, `Employee(email)`, `Employee(employeeCode)`, `Department(email)`, `Department(name)`, `Department(code)`, `Project(code)`, `Task(taskCode)`, and `TaskLabel(name)`.
+    *   `@@unique([projectId, employeeId])` on `project_members` to enforce single mapping logic.
+    *   `@@unique([taskId, employeeId])` on `task_assignees` to block duplicate memberships.
+    *   `@@unique([taskId, dependsOnTaskId])` on `task_dependencies` to block duplicate blocker mappings.
 3.  **Filtered Search Indexes**:
-    *   `@@index([status])` on the `employees` table. Speeds up rendering stats.
-    *   `@@index([code])` and `@@index([status])` on the `departments` table. Speeds up filter scans.
+    *   `@@index([status])` on the `employees` table.
+    *   `@@index([code])` and `@@index([status])` on the `departments` table.
     *   `@@index([code])`, `@@index([status])`, and `@@index([priority])` on the `projects` table.
+    *   `@@index([taskCode])`, `@@index([status])`, and `@@index([priority])` on the `tasks` table.
 
 ---
 

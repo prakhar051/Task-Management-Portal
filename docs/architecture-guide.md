@@ -349,6 +349,81 @@ Inside the Project Details view:
 *   `ManagerAssignmentModal`: Renders employees selector dropdowns, assigning project manager.
 *   `MemberAssignmentModal`: Renders checkboxes list with dropdown role allocations (`TEAM_LEAD`, `DEVELOPER`, `TESTER`, etc.) to map project members in a transaction.
 
+## 📂 8. Task Management Architecture & Workflows
+
+The Task Module supports parent/subtask self-relational structures, drag-and-drop status workflows, blocker dependencies, comment discussions, and local attachments uploads.
+
+### 8.1 Parent/Hierarchy Circular Check
+To prevent self-parenting loops where task A is set as subtask of itself or one of its descendants, a recursive check queries up the parent chain:
+```javascript
+// src/services/task.service.js
+static async checkCircularParent(taskId, parentTaskId) {
+  if (!parentTaskId) return false;
+  if (taskId === parentTaskId) return true;
+
+  let currentParentId = parentTaskId;
+  while (currentParentId) {
+    if (currentParentId === taskId) {
+      return true;
+    }
+    const parent = await prisma.task.findUnique({
+      where: { id: currentParentId },
+      select: { parentTaskId: true }
+    });
+    currentParentId = parent ? parent.parentTaskId : null;
+  }
+  return false;
+}
+```
+
+### 8.2 Dependency Cycle Check (BFS)
+Before adding a dependency blocker from Task A ➔ Task B, a Breadth-First Search (BFS) validates that B does not already directly or transitively depend on A:
+```javascript
+// src/services/task.service.js
+static async checkCircularDependency(taskId, dependsOnTaskId) {
+  if (taskId === dependsOnTaskId) return true;
+
+  const visited = new Set();
+  const queue = [dependsOnTaskId];
+
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    if (currentId === taskId) {
+      return true;
+    }
+
+    if (!visited.has(currentId)) {
+      visited.add(currentId);
+      const deps = await prisma.taskDependency.findMany({
+        where: { taskId: currentId },
+        select: { dependsOnTaskId: true }
+      });
+      for (const d of deps) {
+        queue.push(d.dependsOnTaskId);
+      }
+    }
+  }
+  return false;
+}
+```
+
+### 8.3 Status Transition Workflow
+Status modifications pass through validation checking to enforce progress mappings:
+*   `TODO` status automatically resets `completionPercentage` to `0%`.
+*   `COMPLETED` status automatically sets `completionPercentage` to `100%`.
+*   `CANCELLED` status represents a terminal state (cannot accept new assignees).
+*   Valid state jumps:
+    *   `TODO` ➔ `IN_PROGRESS` or `BLOCKED`
+    *   `IN_PROGRESS` ➔ `IN_REVIEW` or `BLOCKED`
+    *   `IN_REVIEW` ➔ `COMPLETED` or `IN_PROGRESS` or `TODO`
+    *   `BLOCKED` ➔ `IN_PROGRESS`
+    *   `COMPLETED` ➔ `IN_PROGRESS`
+
+### 8.4 Kanban Board & HTML5 Drag and Drop
+The board coordinates five columns mapping `TODO`, `IN_PROGRESS`, `IN_REVIEW`, `BLOCKED`, and `COMPLETED`:
+*   `onDragStart` captures the dragged card's `taskId` payload.
+*   `onDrop` triggers a `PATCH` request to `/api/tasks/:id/status` passing the target column status. If the service transition checks fail, the card resets to its source column.
+
 ---
 
 ## 🔗 Internal Configuration References

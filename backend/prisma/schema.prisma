@@ -101,6 +101,10 @@ model Employee {
   managedDepartments Department[]   @relation("DepartmentManager")
   managedProjects    Project[]      @relation("ProjectManager")
   projectMemberships ProjectMember[]
+  reportedTasks      Task[]         @relation("ReporterTasks")
+  taskAssignments    TaskAssignee[]
+  taskComments       TaskComment[]
+  uploadedAttachments TaskAttachment[] @relation("UploaderAttachments")
 
   @@index([employeeCode])
   @@index([email])
@@ -200,6 +204,7 @@ model Project {
   department   Department      @relation("DepartmentProjects", fields: [departmentId], references: [id], onDelete: Restrict)
   manager      Employee?       @relation("ProjectManager", fields: [managerId], references: [id], onDelete: SetNull)
   members      ProjectMember[]
+  tasks        Task[]          @relation("ProjectTasks")
 
   @@index([code])
   @@index([status])
@@ -225,3 +230,157 @@ model ProjectMember {
   @@index([employeeId])
   @@map("project_members")
 }
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  BLOCKED
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskType {
+  FEATURE
+  BUG
+  IMPROVEMENT
+  DOCUMENTATION
+  RESEARCH
+}
+
+model Task {
+  id                   String           @id @default(uuid())
+  taskCode             String           @unique
+  title                String
+  description          String?
+  projectId            String
+  parentTaskId         String?
+  reporterId           String?          
+  status               TaskStatus       @default(TODO)
+  priority             TaskPriority     @default(MEDIUM)
+  type                 TaskType         @default(FEATURE)
+  dueDate              DateTime?
+  estimatedHours       Float?
+  actualHours          Float?
+  completionPercentage Int              @default(0)
+  isDeleted            Boolean          @default(false)
+  deletedAt            DateTime?
+
+  // Audit Fields
+  createdById          String?
+  updatedById          String?
+  deletedById          String?
+
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  // Relations
+  project              Project          @relation("ProjectTasks", fields: [projectId], references: [id], onDelete: Cascade)
+  parentTask           Task?            @relation("SubTasks", fields: [parentTaskId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subTasks             Task[]           @relation("SubTasks")
+  reporter             Employee?        @relation("ReporterTasks", fields: [reporterId], references: [id], onDelete: SetNull)
+  assignees            TaskAssignee[]
+  comments             TaskComment[]
+  attachments          TaskAttachment[]
+  dependencies         TaskDependency[] @relation("TaskDependent")
+  blockedTasks         TaskDependency[] @relation("TaskBlocked")
+  labels               TaskLabel[]      @relation("TaskLabels")
+
+  @@index([taskCode])
+  @@index([status])
+  @@index([priority])
+  @@index([projectId])
+  @@index([parentTaskId])
+  @@index([reporterId])
+  @@map("tasks")
+}
+
+model TaskAssignee {
+  id         String   @id @default(uuid())
+  taskId     String
+  employeeId String
+  assignedAt DateTime @default(now())
+
+  // Relations
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, employeeId])
+  @@index([taskId])
+  @@index([employeeId])
+  @@map("task_assignees")
+}
+
+model TaskDependency {
+  id              String   @id @default(uuid())
+  taskId          String
+  dependsOnTaskId String
+  createdAt       DateTime @default(now())
+
+  // Relations
+  task            Task     @relation("TaskDependent", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOnTask   Task     @relation("TaskBlocked", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, dependsOnTaskId])
+  @@index([taskId])
+  @@index([dependsOnTaskId])
+  @@map("task_dependencies")
+}
+
+model TaskComment {
+  id         String    @id @default(uuid())
+  taskId     String
+  employeeId String
+  comment    String
+  isDeleted  Boolean   @default(false)
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // Relations
+  task       Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([employeeId])
+  @@map("task_comments")
+}
+
+model TaskAttachment {
+  id           String   @id @default(uuid())
+  taskId       String
+  fileName     String
+  filePath     String
+  fileType     String
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  // Relations
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploader     Employee @relation("UploaderAttachments", fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([uploadedById])
+  @@map("task_attachments")
+}
+
+model TaskLabel {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  color     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  tasks     Task[]   @relation("TaskLabels")
+
+  @@map("task_labels")
+}
+

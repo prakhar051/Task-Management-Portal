@@ -1412,6 +1412,190 @@ Downloads CSV or XLSX files.
 
 ---
 
+## 📋 10. Task Endpoints
+
+### 10.1 List Tasks (Paginated, Filtered & Searched)
+Queries tasks directory under RBAC constraints.
+*   **Method**: `GET`
+*   **Path**: `/tasks`
+*   **Access Control**: Authenticated (ADMIN: full, MANAGER: own dept/projects, EMPLOYEE: assigned, reported, or project-member tasks)
+*   **Query Parameters**:
+    *   `page` (default: `1`), `limit` (default: `10`), `search`
+    *   `status` (`TODO | IN_PROGRESS | IN_REVIEW | BLOCKED | COMPLETED | CANCELLED`)
+    *   `priority` (`LOW | MEDIUM | HIGH | URGENT`)
+    *   `type` (`FEATURE | BUG | IMPROVEMENT | DOCUMENTATION | RESEARCH`)
+    *   `projectId`, `assigneeId`, `reporterId`, `dueDate`
+    *   `sortBy` (`dueDate | priority | status | createdAt | updatedAt`)
+    *   `sortOrder` (`asc | desc`)
+*   **Response Payload**:
+    ```json
+    {
+      "success": true,
+      "message": "Tasks retrieved successfully.",
+      "tasks": [
+        {
+          "id": "task_uuid",
+          "taskCode": "PRJ-001",
+          "title": "Setup db indices",
+          "status": "IN_PROGRESS",
+          "priority": "HIGH",
+          "completionPercentage": 40,
+          "project": { "id": "proj_uuid", "name": "API Service" },
+          "reporter": { "id": "emp_uuid", "firstName": "Alice", "lastName": "Smith" },
+          "assignees": [
+            { "employee": { "id": "emp_uuid_2", "firstName": "Bob", "avatar": null } }
+          ],
+          "labels": []
+        }
+      ],
+      "pagination": { "page": 1, "limit": 10, "total": 1, "pages": 1 }
+    }
+    ```
+
+---
+
+### 10.2 Get Task By ID
+Retrieves single task details including hierarchy nodes and blocker arrays.
+*   **Method**: `GET`
+*   **Path**: `/tasks/:id`
+*   **Access Control**: Authenticated (RBAC protected)
+
+---
+
+### 10.3 Create Task
+Registers a new project task track.
+*   **Method**: `POST`
+*   **Path**: `/tasks`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "title": "Integrate OAuth",
+      "projectId": "proj_uuid",
+      "parentTaskId": null,
+      "status": "TODO",
+      "priority": "HIGH",
+      "type": "FEATURE",
+      "estimatedHours": 8,
+      "dueDate": "2026-09-01T00:00:00.000Z"
+    }
+    ```
+*   **Response Payload**: Yields task details with auto-generated sequential `taskCode`.
+
+---
+
+### 10.4 Update Task Details
+Edits task attributes. Enforces parent-hierarchy loop checks.
+*   **Method**: `PATCH`
+*   **Path**: `/tasks/:id`
+*   **Access Control**: Admin (Full), Assigned/Reporter Employees (Write-level metadata only)
+
+---
+
+### 10.5 Soft Delete Task
+Soft deletes a task and purges its assignees and dependency mappings.
+*   **Method**: `DELETE`
+*   **Path**: `/tasks/:id`
+*   **Access Control**: Admin Only
+
+---
+
+### 10.6 Restore Task
+Restores a soft-deleted task.
+*   **Method**: `PATCH`
+*   **Path**: `/tasks/:id/restore`
+*   **Access Control**: Admin Only
+
+---
+
+### 10.7 Update Task Status
+Transition task status. Enforces valid status workflows.
+*   **Method**: `PATCH`
+*   **Path**: `/tasks/:id/status`
+*   **Request Body**: `{ "status": "IN_PROGRESS" }`
+
+---
+
+### 10.8 Update Task Progress
+Directly update completion percentage (0 - 100).
+*   **Method**: `PATCH`
+*   **Path**: `/tasks/:id/progress`
+*   **Request Body**: `{ "completionPercentage": 50 }`
+
+---
+
+### 10.9 Assign Task Assignees
+Syncs task assignees. Rejects if task's project is CANCELLED.
+*   **Method**: `PATCH`
+*   **Path**: `/tasks/:id/assignees`
+*   **Access Control**: Admin Only
+*   **Request Body**: `{ "employeeIds": ["emp_uuid_1", "emp_uuid_2"] }`
+
+---
+
+### 10.10 Sync Blocker Dependencies
+Assign blocker dependencies. Enforces BFS cycle loop checking.
+*   **Method**: `PATCH`
+*   **Path**: `/tasks/:id/dependencies`
+*   **Request Body**: `{ "dependsOnTaskIds": ["blocker_uuid_1"] }`
+
+---
+
+### 10.11 Post Comment
+Appends a conversation comment.
+*   **Method**: `POST`
+*   **Path**: `/tasks/:id/comments`
+*   **Request Body**: `{ "comment": "Review requested." }`
+
+---
+
+### 10.12 Update Comment
+*   **Method**: `PATCH`
+*   **Path**: `/tasks/comments/:commentId`
+*   **Access Control**: Comment Creator only
+
+---
+
+### 10.13 Soft Delete Comment
+*   **Method**: `DELETE`
+*   **Path**: `/tasks/comments/:commentId`
+*   **Access Control**: Comment Creator or Admin
+
+---
+
+### 10.14 List Comments
+*   **Method**: `GET`
+*   **Path**: `/tasks/:id/comments`
+
+---
+
+### 10.15 Upload Attachment
+*   **Method**: `POST`
+*   **Path**: `/tasks/:id/attachments`
+*   **Payload**: FormData with file field `attachment` (Max 10MB)
+
+---
+
+### 10.16 Delete Attachment
+*   **Method**: `DELETE`
+*   **Path**: `/tasks/attachments/:attachmentId`
+
+---
+
+### 10.17 Bulk Operations (Admin Only)
+*   `DELETE /tasks/bulk` -> body `{ ids: [UUID] }`
+*   `PATCH /tasks/bulk-status` -> body `{ ids: [UUID], status: "COMPLETED" }`
+*   `PATCH /tasks/bulk-priority` -> body `{ ids: [UUID], priority: "URGENT" }`
+*   `PATCH /tasks/bulk-restore` -> body `{ ids: [UUID] }`
+
+---
+
+### 10.18 Export Tasks
+*   **Method**: `GET`
+*   **Path**: `/tasks/export?format=csv`
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)

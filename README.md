@@ -35,8 +35,8 @@ Explore the deep technical implementation and design choices behind this project
 *   **👥 Collaborative Employee Directory**: Complete employee profile management supporting soft deletes, restores, local Multer avatar uploads, paginated searches, bulk update status controls, and CSV/Excel roster exports.
 *   **🏢 Collaborative Department Management**: Roster creations, office location parameters, managers assignments, employee allocations, bulk actions, search filters, and statistics analytics dashboard.
 *   **📂 Collaborative Project Track**: Complete project creation, department associations, manager mappings, transactional member assignments with customizable roles, timelines elapsed duration, progress bars, bulk actions, and CSV/Excel exports.
-*   **📋 Rich Task Lifecycle Management**: Complete CRUD operations on tasks. Filter tasks by category, priority (Low, Medium, High), status (To-Do, In-Progress, Completed), or search query.
-*   **👥 Dynamic Collaborative Assignment**: Admin interface to dynamically assign tasks to team members with real-time logging of updates.
+*   **📋 Rich Task Lifecycle Management**: Complete task CRUD tracks, self-relational parent/sub-task hierarchies, blocker dependencies cycle BFS check, multiple assignees allocation, comments forum feed, local file uploader up to 10MB, and export CSV/Excel sheets.
+*   **📋 Drag and Drop Kanban board**: HTML5 board with TODO, IN_PROGRESS, IN_REVIEW, BLOCKED, and COMPLETED columns mapping status transitions.
 *   **📊 Interactive Dashboard Analytics**: Rich responsive Recharts visual components (Pie, Doughnut, Bar, Line, Area) presenting status distribution, priorities, performance graphs, and debounced search filters.
 *   **📁 Custom Category Tagging**: Dynamic creation of task categories to isolate and group tasks by business initiatives.
 *   **🛡️ Robust Audit Logging**: Immutable activity logs tracking every status transition and task reassignment for compliance.
