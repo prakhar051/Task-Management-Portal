@@ -107,12 +107,14 @@ For the complete schema code and normalization breakdown, view the [docs/databas
 The client application is built as a single-page application using **React Router v6** to enforce public and private route constraints. Key highlights of the frontend design:
 *   **Custom Axios Client Interceptor**: Intercepts outgoing requests to append in-memory access tokens and dynamically catches `401 Unauthorized` responses to execute silent refresh token rotations, retrying failed requests.
 *   **Zustand Auth Store**: Client-side state manager handling authentication status, user profile details, loading spinners, and access tokens in memory to prevent XSS leakage.
-*   **Tailwind UI**: Modern dark-theme styled components using CSS flex grid, backdrop filters, and hover micro-animations.
+*   **Recharts Data Visualization**: Implements responsive canvas-based charts mapping status distributions (Pie), priority groups (Doughnut), performance vectors (Area), and completion history (Line/Bar) with clean Tooltip hover states.
+*   **Tailwind CSS UI**: Modern dark-theme styled components using glassmorphic cards, CSS flex grids, backdrop filters, and Framer Motion hover animations.
 
 ### 5.2 Backend API (Node.js/Express.js)
 The backend is structured using the **Controller-Service-Repository** pattern to isolate routing, business logic, and database operations.
 *   **Middleware Pipeline**: Incoming requests pass through Helmet (header security), CORS configurations, Express-rate-limiters, and Zod validator schemas before routing.
 *   **Dual-Token Handshake**: Implements validation of stateless short-lived access tokens via authorization headers and session-rotated refresh tokens via HttpOnly cookies.
+*   **Dashboard Aggregates Service**: Exposes metrics endpoints returning role-filtered statistics cards, active notification alerts, activity logs, and charting datasets. The services utilize mock adapters in early development to decouple database dependencies.
 
 For directories, structural diagrams, and source code patterns, see the [docs/architecture-guide.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/architecture-guide.md) architectural guide.
 

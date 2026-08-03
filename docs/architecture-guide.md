@@ -75,47 +75,35 @@ graph LR
 *   **Service Layer**: Represents the transactional domain logic. Orchestrates calls to repositories and formats data structures (e.g. calculating priority points or trigger logs).
 *   **Repository Layer (Prisma ORM)**: Executes direct database reads, writes, joins, and indexing structures.
 
-### 2.2 Client-Side Authentication State Provider (Frontend)
-The React client utilizes the **Context Provider** design pattern. The `AuthContext` wraps the entire app, exposing security actions (`login`, `logout`) and token variables to all components without manual prop-drilling.
+### 2.2 Client-Side Zustand Authentication Store (Frontend)
+The React client utilizes the **Zustand Store** pattern. Global authentication states, access tokens, loading markers, and API triggers are centralized inside a unified store (`authStore.js`). This allows components to inspect user details or trigger login handshakes reactively without wrapping page roots in Context Providers.
 
 ---
 
 ## 💻 3. Key Architectural Abstractions (Code Snippets)
 
-### 3.1 Frontend: Custom Axios Client Hook with Token Interceptor
-Centralized network module automatically appending session contexts and reacting to token expiration.
+### 3.1 Frontend: Custom Axios API Client with Rotation Interceptor
+Centralized Axios instance dynamically appending in-memory JWT access tokens and intercepting status 401 to execute silent refresh token rotations.
 
 ```javascript
-// src/hooks/useAxios.js
+// src/api/apiClient.js
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export const useAxios = () => {
-  const navigate = useNavigate();
+export const apiClient = axios.create({
+  baseURL: API_URL,
+  withCredentials: true
+});
 
-  const client = axios.create({
-    baseURL: API_URL,
-    withCredentials: true, // Auto-send cookies containing HTTP-only JWT
-  });
-
-  // Response Interceptor handles authorization expiry
-  client.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      if (error.response && error.response.status === 401) {
-        // Clear locally stored session attributes
-        localStorage.removeItem('user_session');
-        // Route back to Login page
-        navigate('/login');
-      }
-      return Promise.reject(error);
-    }
-  );
-
-  return client;
-};
+apiClient.interceptors.request.use((config) => {
+  const { accessToken } = useAuthStore.getState();
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
+});
 ```
 
 ### 3.2 Backend: Decoupled Controller-Service Routing Implementation
@@ -183,6 +171,44 @@ export class TaskService {
   }
 }
 ```
+
+## 📊 4. Dashboard Foundation & Integration Points
+
+The Dashboard Module is built on a decoupled architecture, separating visual representations from the business database models. This foundation provides structural contracts that will seamlessly hook into future tables as they are implemented.
+
+### 4.1 Component Hierarchy (Frontend)
+The frontend utilizes a modular grid format composed of generic, decoupled visual cards:
+```
+Dashboard (page)
+│
+├── DashboardHeader (receives onSearch callback, handles debounce)
+│
+├── StatsCard (metrics representation, animated by framer-motion)
+│
+├── QuickActions (role-filtered button navigations)
+│
+├── ChartCard (generic wrappers injecting Recharts)
+│   ├── Pie / Doughnut Chart
+│   └── Bar / Line / Area Chart
+│
+├── ActivityCard (displays activity logs list)
+│
+└── NotificationCard (displays user alert logs list)
+```
+
+### 4.2 Data Flows
+1.  **Auth Boot**: The route guard `ProtectedRoute` verifies session credentials.
+2.  **Parallel Load**: React triggers parallel API fetches (`overview`, `activity`, `notifications`, `charts`) via `apiClient`.
+3.  **Role Filter**: The server filters the response payload according to `req.user.role`.
+4.  **State Render**: Zustand updates active state records, feeding responsive charting configurations.
+
+### 4.3 Future Integration Roadmap
+When the business modules are fully developed in later phases, the dashboard foundation integrates without refactoring:
+*   **Prisma Aggregations**: The service layer `dashboard.service.js` will replace mock arrays with direct queries:
+    *   *Overview stats*: `prisma.task.count({ where: { status: 'TODO' } })`.
+    *   *Departments stats*: `prisma.department.count()`.
+    *   *User assignments*: Filtering queries using relations: `prisma.task.findMany({ where: { assigneeId: userId } })`.
+*   **Activity Logs**: Read records from the unified `ActivityLog` relational table.
 
 ---
 

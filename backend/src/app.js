@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 // Load environmental variables
@@ -39,8 +40,9 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Phase 2 Authentication API router
+// Register routers
 app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Global 404 handler for unmatched routes
 app.use(notFoundHandler);

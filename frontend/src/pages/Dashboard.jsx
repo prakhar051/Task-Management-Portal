@@ -1,146 +1,140 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuthStore } from '../store/authStore';
+import apiClient from '../api/apiClient';
+
+// Import sub-components
+import DashboardHeader from '../components/dashboard/DashboardHeader';
+import StatsCard from '../components/dashboard/StatsCard';
+import ChartCard from '../components/dashboard/ChartCard';
+import ActivityCard from '../components/dashboard/ActivityCard';
+import NotificationCard from '../components/dashboard/NotificationCard';
+import QuickActions from '../components/dashboard/QuickActions';
+import DashboardSkeleton from '../components/dashboard/DashboardSkeleton';
+import ErrorState from '../components/dashboard/ErrorState';
 
 export default function Dashboard() {
-  const statistics = [
-    { title: 'Total Employees', value: '24', change: '+2 this month', icon: '👥', color: 'text-blue-500 bg-blue-500/10' },
-    { title: 'Active Projects', value: '8', change: '2 near deadline', icon: '📂', color: 'text-purple-500 bg-purple-500/10' },
-    { title: 'Pending Tasks', value: '42', change: '12 high priority', icon: '⏳', color: 'text-amber-500 bg-amber-500/10' },
-    { title: 'Completed Tasks', value: '189', change: '+14 this week', icon: '✅', color: 'text-emerald-500 bg-emerald-500/10' }
-  ];
+  const user = useAuthStore((state) => state.user) || { role: 'EMPLOYEE' };
 
-  const recentTasks = [
-    { id: 1, title: 'Setup Neon DB Server', project: 'Task Portal', assignee: 'Jane Doe', status: 'Completed', priority: 'High' },
-    { id: 2, title: 'Integrate Helmet Headers', project: 'Security Suite', assignee: 'John Smith', status: 'In Progress', priority: 'Medium' },
-    { id: 3, title: 'Build Landing Banner', project: 'Marketing UI', assignee: 'Alice Green', status: 'To-Do', priority: 'Low' }
-  ];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // API datasets state
+  const [overview, setOverview] = useState(null);
+  const [activities, setActivities] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [charts, setCharts] = useState(null);
+  const [filterQuery, setFilterQuery] = useState('');
+
+  // Fetch all dashboard panels data in parallel
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [resOverview, resActivity, resNotifications, resCharts] = await Promise.all([
+        apiClient.get('/dashboard/overview'),
+        apiClient.get('/dashboard/activity'),
+        apiClient.get('/dashboard/notifications'),
+        apiClient.get('/dashboard/charts')
+      ]);
+
+      setOverview(resOverview.data.data);
+      setActivities(resActivity.data.data);
+      setNotifications(resNotifications.data.data);
+      setCharts(resCharts.data.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed connecting to the dashboard APIs.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // Debounced search query handler from header
+  const handleSearch = useCallback((query) => {
+    setFilterQuery(query);
+  }, []);
+
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error) {
+    return <ErrorState errorMsg={error} onRetry={fetchDashboardData} />;
+  }
+
+  // Filter lists based on the query if needed
+  const filteredActivities = activities.filter((act) =>
+    act.details.toLowerCase().includes(filterQuery.toLowerCase()) ||
+    act.user.toLowerCase().includes(filterQuery.toLowerCase())
+  );
+
+  // Stats Card configurations based on user roles
+  const getStatsCards = () => {
+    if (!overview) return [];
+
+    if (user.role === 'ADMIN') {
+      return [
+        { title: 'Total Employees', value: overview.totalEmployees, change: '+2 new registers', icon: '👥', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+        { title: 'Active Projects', value: overview.activeProjects, change: `${overview.completedProjects} archives`, icon: '📂', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+        { title: 'Pending Tasks', value: overview.pendingTasks, change: `${overview.overdueTasks} urgent logs`, icon: '⏳', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+        { title: 'Completed Tasks', value: overview.completedTasks, change: '+14 this week', icon: '✅', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' }
+      ];
+    } else if (user.role === 'MANAGER') {
+      return [
+        { title: 'Team Size', value: overview.totalEmployees, change: '1 managed department', icon: '👥', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+        { title: 'Managed Projects', value: overview.totalProjects, change: `${overview.activeProjects} active projects`, icon: '📂', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+        { title: 'Team Pending Tasks', value: overview.pendingTasks, change: `${overview.overdueTasks} overdue`, icon: '⏳', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+        { title: 'Team Completed Tasks', value: overview.completedTasks, change: '+8 this week', icon: '✅', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' }
+      ];
+    } else {
+      // EMPLOYEE role stats
+      return [
+        { title: 'My Total Tasks', value: overview.totalTasks, change: 'Assigned checklist', icon: '📋', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+        { title: 'My Pending Tasks', value: overview.pendingTasks, change: `${overview.overdueTasks} overdue alerts`, icon: '⏳', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+        { title: 'My Completed Tasks', value: overview.completedTasks, change: '+3 completed this week', icon: '✅', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+        { title: 'Assigned Projects', value: overview.totalProjects, change: 'Active collaborations', icon: '📂', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' }
+      ];
+    }
+  };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-extrabold text-white">System Dashboard</h1>
-        <p className="text-slateDark-400 mt-2">Real-time status updates and workload analytics.</p>
-      </div>
+    <div className="space-y-8 pb-12">
+      {/* Search and metadata Greeting Header */}
+      <DashboardHeader onSearch={handleSearch} />
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statistics.map((stat, index) => (
-          <div key={index} className="glass rounded-xl p-6 relative overflow-hidden group hover:scale-[1.02] transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-slateDark-400 text-sm font-semibold">{stat.title}</span>
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${stat.color}`}>
-                {stat.icon}
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-white mb-2">{stat.value}</div>
-            <div className="text-xs text-slateDark-400 flex items-center space-x-1">
-              <span className="text-emerald-500 font-medium">↑</span>
-              <span>{stat.change}</span>
-            </div>
-          </div>
+      {/* Metrics Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {getStatsCards().map((card, index) => (
+          <StatsCard
+            key={index}
+            title={card.title}
+            value={card.value}
+            change={card.change}
+            icon={card.icon}
+            color={card.color}
+          />
         ))}
       </div>
 
-      {/* Progress Charts & Lists */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Mock Analytics Chart */}
-        <div className="lg:col-span-2 glass rounded-xl p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-lg text-white">Project Workload Analysis</h3>
-            <span className="text-xs text-brand-400 font-semibold cursor-pointer hover:underline">View reports</span>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-slateDark-300">Engineering Module</span>
-                <span className="text-white font-semibold">82%</span>
-              </div>
-              <div className="w-full bg-slateDark-900 rounded-full h-2">
-                <div className="bg-brand-500 h-2 rounded-full" style={{ width: '82%' }} />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-slateDark-300">Database Optimization</span>
-                <span className="text-white font-semibold">45%</span>
-              </div>
-              <div className="w-full bg-slateDark-900 rounded-full h-2">
-                <div className="bg-purple-500 h-2 rounded-full" style={{ width: '45%' }} />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-slateDark-300">Security Integration</span>
-                <span className="text-white font-semibold">60%</span>
-              </div>
-              <div className="w-full bg-slateDark-900 rounded-full h-2">
-                <div className="bg-amber-500 h-2 rounded-full" style={{ width: '60%' }} />
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Quick Action Operations Buttons */}
+      <QuickActions />
 
-        {/* Task lists status distribution */}
-        <div className="glass rounded-xl p-6">
-          <h3 className="font-bold text-lg text-white mb-6">Priority Distribution</h3>
-          <div className="flex justify-around items-center h-40">
-            {/* Visual HTML progress circles/indicators */}
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full border-4 border-red-500 flex items-center justify-center text-sm font-bold text-white mb-2">12</div>
-              <span className="text-xs text-slateDark-400 font-semibold">High Priority</span>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full border-4 border-amber-500 flex items-center justify-center text-sm font-bold text-white mb-2">18</div>
-              <span className="text-xs text-slateDark-400 font-semibold">Medium</span>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full border-4 border-blue-500 flex items-center justify-center text-sm font-bold text-white mb-2">12</div>
-              <span className="text-xs text-slateDark-400 font-semibold">Low Priority</span>
-            </div>
-          </div>
+      {/* Recharts Analytics Displays */}
+      {charts && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <ChartCard title="Task Lifecycle States" type="pie" data={charts.tasksByStatus} />
+          <ChartCard title="Task Urgency priorities" type="doughnut" data={charts.tasksByPriority} />
+          <ChartCard title="Performance Trends" type="area" data={charts.monthlyPerformance} />
         </div>
-      </div>
+      )}
 
-      {/* Recent Activity Table */}
-      <div className="glass rounded-xl p-6 overflow-hidden">
-        <h3 className="font-bold text-lg text-white mb-6">Recent Work Orders</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slateDark-800 text-slateDark-400 text-sm font-semibold">
-                <th className="pb-3">Task Details</th>
-                <th className="pb-3">Project</th>
-                <th className="pb-3">Assignee</th>
-                <th className="pb-3">Status</th>
-                <th className="pb-3">Priority</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentTasks.map((task) => (
-                <tr key={task.id} className="border-b border-slateDark-900 last:border-0 hover:bg-slateDark-900/50 transition-colors text-sm text-slateDark-300">
-                  <td className="py-4 font-semibold text-white">{task.title}</td>
-                  <td className="py-4">{task.project}</td>
-                  <td className="py-4">{task.assignee}</td>
-                  <td className="py-4">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                      task.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400' :
-                      task.status === 'In Progress' ? 'bg-brand-500/10 text-brand-400' : 'bg-slateDark-800 text-slateDark-400'
-                    }`}>
-                      {task.status}
-                    </span>
-                  </td>
-                  <td className="py-4">
-                    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                      task.priority === 'High' ? 'bg-red-500/10 text-red-400' :
-                      task.priority === 'Medium' ? 'bg-amber-500/10 text-amber-400' : 'bg-blue-500/10 text-blue-400'
-                    }`}>
-                      {task.priority}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Activities and Notifications listings logs */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ActivityCard activities={filteredActivities} />
+        <NotificationCard notifications={notifications} />
       </div>
     </div>
   );

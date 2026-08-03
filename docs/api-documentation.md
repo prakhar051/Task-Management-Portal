@@ -559,6 +559,130 @@ Used by administrators to populate task assignee dropdown menus.
         }
         ```
 
+## 📊 6. Dashboard Endpoints
+
+### 6.1 Get Overview Metrics
+Returns aggregate statistics tailored to the authenticated user's role.
+*   **Method**: `GET`
+*   **Path**: `/dashboard/overview`
+*   **Access Control**: Authenticated (ADMIN, MANAGER, EMPLOYEE)
+*   **Request Body**: None
+*   **Response Codes & Payloads**:
+    *   `200 OK` (ADMIN response template example)
+        ```json
+        {
+          "success": true,
+          "message": "Dashboard overview statistics retrieved successfully.",
+          "data": {
+            "totalEmployees": 24,
+            "totalDepartments": 4,
+            "totalProjects": 8,
+            "activeProjects": 5,
+            "completedProjects": 3,
+            "totalTasks": 210,
+            "pendingTasks": 42,
+            "completedTasks": 168,
+            "overdueTasks": 3
+          }
+        }
+        ```
+
+---
+
+### 6.2 Get Recent Activity Logs
+Returns the latest workspace activities list (limit 10).
+*   **Method**: `GET`
+*   **Path**: `/dashboard/activity`
+*   **Access Control**: Authenticated (ADMIN, MANAGER, EMPLOYEE)
+*   **Request Body**: None
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Recent dashboard activity logs retrieved successfully.",
+          "data": [
+            {
+              "id": "act_1",
+              "userId": "usr_admin_1",
+              "user": "Admin Operator",
+              "action": "PROJECT_CREATED",
+              "details": "Project 'Task Management Portal' created",
+              "timestamp": "2026-08-03T10:00:00.000Z"
+            }
+          ]
+        }
+        ```
+
+---
+
+### 6.3 Get Recent Notifications
+Returns notifications alerts matching user credentials.
+*   **Method**: `GET`
+*   **Path**: `/dashboard/notifications`
+*   **Access Control**: Authenticated (ADMIN, MANAGER, EMPLOYEE)
+*   **Request Body**: None
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Recent user notifications retrieved successfully.",
+          "data": [
+            {
+              "id": "not_1",
+              "userId": "usr_emp_1",
+              "message": "New task 'Secure JWT Handshake' assigned to you by Jane Manager",
+              "read": false,
+              "type": "ASSIGNMENT",
+              "createdAt": "2026-08-03T10:30:00.000Z"
+            }
+          ]
+        }
+        ```
+
+---
+
+### 6.4 Get Chart Datasets
+Returns structured configurations suitable for responsive Recharts widgets.
+*   **Method**: `GET`
+*   **Path**: `/dashboard/charts`
+*   **Access Control**: Authenticated (ADMIN, MANAGER, EMPLOYEE)
+*   **Request Body**: None
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Dashboard analytics chart datasets retrieved successfully.",
+          "data": {
+            "tasksByStatus": [
+              { "name": "To-Do", "value": 15, "fill": "#64748b" },
+              { "name": "In Progress", "value": 25, "fill": "#3b4ee0" },
+              { "name": "Completed", "value": 60, "fill": "#10b981" }
+            ],
+            "tasksByPriority": [
+              { "name": "Low", "value": 45, "fill": "#3b82f6" },
+              { "name": "Medium", "value": 35, "fill": "#f59e0b" },
+              { "name": "High", "value": 20, "fill": "#ef4444" }
+            ],
+            "projectsByStatus": [
+              { "name": "To-Do", "count": 2 },
+              { "name": "In Progress", "count": 4 },
+              { "name": "Completed", "count": 2 }
+            ],
+            "weeklyTaskCompletion": [
+              { "day": "Mon", "completed": 4 },
+              { "day": "Tue", "completed": 8 }
+            ],
+            "monthlyPerformance": [
+              { "month": "Jan", "score": 68 },
+              { "month": "Feb", "score": 75 }
+            ]
+          }
+        }
+        ```
+
 ---
 
 ## 🔗 Architecture & Security References

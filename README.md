@@ -31,10 +31,10 @@ Explore the deep technical implementation and design choices behind this project
 
 ## ✨ Core Features
 
-*   **🔒 Secure Role-Based Authentication**: Secure registration and login using JWT stored in secure HTTP-only cookies, with distinct Admin and Member role authorization tiers.
+*   **🔒 Secure Role-Based Authentication**: Secure registration and login using short-lived in-memory JWT Access Tokens, secure HttpOnly cookie-based Refresh Tokens with rotation, and distinct ADMIN, MANAGER, and EMPLOYEE role authorization tiers.
 *   **📋 Rich Task Lifecycle Management**: Complete CRUD operations on tasks. Filter tasks by category, priority (Low, Medium, High), status (To-Do, In-Progress, Completed), or search query.
 *   **👥 Dynamic Collaborative Assignment**: Admin interface to dynamically assign tasks to team members with real-time logging of updates.
-*   **📊 Interactive Dashboard Analytics**: Rich charts visualizing task completion rates, workload distribution per user, and overdue tasks.
+*   **📊 Interactive Dashboard Analytics**: Rich responsive Recharts visual components (Pie, Doughnut, Bar, Line, Area) presenting status distribution, priorities, performance graphs, and debounced search filters.
 *   **📁 Custom Category Tagging**: Dynamic creation of task categories to isolate and group tasks by business initiatives.
 *   **🛡️ Robust Audit Logging**: Immutable activity logs tracking every status transition and task reassignment for compliance.
 
