@@ -3,8 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import path from 'path';
 import authRoutes from './routes/auth.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
+import employeeRoutes from './routes/employee.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 // Load environmental variables
@@ -22,6 +24,9 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Serve static avatars uploads folder publicly
+app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
 // Parse body JSON payloads (limit size to prevent raw buffer overflow attacks)
 app.use(express.json({ limit: '10kb' }));
@@ -43,6 +48,7 @@ app.get('/api/health', (req, res) => {
 // Register routers
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/employees', employeeRoutes);
 
 // Global 404 handler for unmatched routes
 app.use(notFoundHandler);

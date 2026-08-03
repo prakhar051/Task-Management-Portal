@@ -210,6 +210,45 @@ When the business modules are fully developed in later phases, the dashboard fou
     *   *User assignments*: Filtering queries using relations: `prisma.task.findMany({ where: { assigneeId: userId } })`.
 *   **Activity Logs**: Read records from the unified `ActivityLog` relational table.
 
+## 👥 5. Employee Management Architecture & Repository Pattern
+
+The Employee Module introduces an enterprise-grade architecture separating routing, payload validation, business rules, storage wrappers, and database queries.
+
+### 5.1 Repository Pattern Implementation (Backend)
+To decouple database operations from business logic and Prisma Client schemas, the repository layer `employee.repository.js` encapsulates all SQL-level transactions.
+```javascript
+// src/repositories/employee.repository.js
+export class EmployeeRepository {
+  static async findAndCount({ where, skip, take, orderBy }) {
+    const [employees, total] = await Promise.all([
+      prisma.employee.findMany({ where, skip, take, orderBy }),
+      prisma.employee.count({ where })
+    ]);
+    return { employees, total };
+  }
+}
+```
+
+### 5.2 Storage Service Abstraction & Multer
+Avatars are handled via a local disk storage layout using Multer. The controller calls a unified `StorageService` interface, isolating future migrations to Cloudinary or AWS S3:
+```
+[Multer Middleware] -> [StorageService.saveFile(file)] -> Returns Public URL Path
+                                                      -> Deletes orphaned file on updates
+```
+
+### 5.3 Frontend Component Hierarchy
+The employee listings page is designed using a declarative sub-component hierarchy:
+```
+Employees (page)
+│
+├── EmployeeFilters (handles search key debounce, dropdown tags, bulk edits, exports)
+│
+├── EmployeeTable (presents avatar grids, select list rows, and inline CRUD links)
+│   └── Multi-select Selection Banner (ADMIN only toolbar)
+│
+└── EmployeePagination (footer offset navigator page controls)
+```
+
 ---
 
 ## 🔗 Internal Configuration References

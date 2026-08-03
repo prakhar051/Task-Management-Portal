@@ -35,45 +35,50 @@ erDiagram
         String email UK "Unique Email Address"
         String name "Full Username"
         String passwordHash "Bcrypt Encrypted Hash"
-        Role role "ADMIN | MEMBER"
+        Role role "ADMIN | MANAGER | EMPLOYEE"
         DateTime createdAt "Timestamp"
     }
 
-    Category {
+    Session {
         String id PK "UUID"
-        String name UK "Unique Category Name"
-        String description "Optional Notes"
-        DateTime createdAt "Timestamp"
-    }
-
-    Task {
-        String id PK "UUID"
-        String title "Task Title"
-        String description "Detail Tasks"
-        Status status "TODO | IN_PROGRESS | COMPLETED"
-        Priority priority "LOW | MEDIUM | HIGH"
-        DateTime dueDate "Deadline"
-        String categoryId FK "Links to Category.id"
-        String assigneeId FK "Links to User.id"
-        String creatorId FK "Links to User.id"
-        DateTime createdAt "Timestamp"
-        DateTime updatedAt "Timestamp"
-    }
-
-    ActivityLog {
-        String id PK "UUID"
-        String action "TASK_CREATED | STATUS_CHANGED | ASSIGNEE_UPDATED"
-        String details "Context description"
+        String refreshToken UK "Unique Refresh Token"
         String userId FK "Links to User.id"
-        String taskId FK "Links to Task.id"
-        DateTime createdAt "Timestamp"
+        String userAgent "Browser details"
+        String ipAddress "IP address"
+        DateTime expiresAt "Expiration"
     }
 
-    User ||--o{ Task : "assignee"
-    User ||--o{ Task : "creator"
-    User ||--o{ ActivityLog : "performs"
-    Category ||--o{ Task : "groups"
-    Task ||--o{ ActivityLog : "logs"
+    AuthLog {
+        String id PK "UUID"
+        String userId FK "Links to User.id"
+        String action "Action logged"
+        String status "SUCCESS | FAILED"
+        String ipAddress "Request IP"
+        String userAgent "Browser Agent"
+        DateTime timestamp "Timestamp"
+    }
+
+    Employee {
+        String id PK "UUID"
+        String employeeCode UK "Unique Code"
+        String userId FK "Links to User.id (Unique)"
+        String firstName "First Name"
+        String lastName "Last Name"
+        String email UK "Unique Email"
+        String phone "Phone Number"
+        String designation "Designation Title"
+        String departmentId "Department Link (Nullable)"
+        String managerId "Manager ID Link"
+        DateTime hireDate "Date of Hire"
+        String avatar "Avatar Path"
+        EmployeeStatus status "ACTIVE | INACTIVE | ON_LEAVE"
+        Boolean isDeleted "Soft Delete flag"
+        DateTime deletedAt "Deletion timestamp"
+    }
+
+    User ||--o| Employee : "profile"
+    User ||--o{ Session : "sessions"
+    User ||--o{ AuthLog : "authLogs"
 ```
 
 ---
@@ -83,110 +88,111 @@ erDiagram
 This is the exact, production-ready schema configuration file compiling model fields, relational mappings, indexes, and database driver setups.
 
 ```prisma
-// datasource configures the engine to target PostgreSQL
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// generator specifies compilation outputs for type-safe JS bindings
 generator client {
   provider = "prisma-client-js"
 }
 
-// User role access levels
 enum Role {
   ADMIN
-  MEMBER
+  MANAGER
+  EMPLOYEE
 }
 
-// Task execution states
-enum Status {
-  TODO
-  IN_PROGRESS
-  COMPLETED
-}
-
-// Task urgency priorities
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
 }
 
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
+  id           String    @id @default(uuid())
+  email        String    @unique
   name         String
   passwordHash String
-  role         Role          @default(MEMBER)
-  createdAt    DateTime      @default(now())
+  role         Role      @default(EMPLOYEE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   
   // Relations
-  assignedTasks Task[]       @relation("TaskAssignee")
-  createdTasks  Task[]       @relation("TaskCreator")
-  activities    ActivityLog[]
+  sessions     Session[]
+  authLogs     AuthLog[]
+  employee     Employee?
 
   @@map("users")
 }
 
-model Category {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String?
-  createdAt   DateTime @default(now())
-  
-  // Relations
-  tasks       Task[]
-
-  @@map("categories")
-}
-
-model Task {
-  id          String      @id @default(uuid())
-  title       String
-  description String
-  status      Status      @default(TODO)
-  priority    Priority    @default(MEDIUM)
-  dueDate     DateTime
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  // Foreign keys
-  categoryId  String
-  assigneeId  String?
-  creatorId   String
+model Session {
+  id           String   @id @default(uuid())
+  refreshToken String   @unique
+  userId       String
+  userAgent    String
+  ipAddress    String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  assignee    User?       @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
-  creator     User        @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Restrict)
-  activities  ActivityLog[]
-
-  // Indexes optimize queries on relationships, filters, and searches
-  @@index([assigneeId])
-  @@index([categoryId])
-  @@index([status, priority])
-  @@map("tasks")
-}
-
-model ActivityLog {
-  id        String   @id @default(uuid())
-  action    String
-  details   String
-  createdAt DateTime @default(now())
-
-  // Foreign keys
-  userId    String
-  taskId    String
-
-  // Relations
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([taskId])
-  @@map("activity_logs")
+  @@map("sessions")
+}
+
+model AuthLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  status    String
+  ipAddress String
+  userAgent String
+  timestamp DateTime @default(now())
+
+  // Relations
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("auth_logs")
+}
+
+model Employee {
+  id           String         @id @default(uuid())
+  employeeCode String         @unique
+  userId       String?        @unique
+  firstName    String
+  lastName     String
+  email        String         @unique
+  phone        String
+  designation  String
+  departmentId String?        // Nullable - future ready
+  managerId    String?        // Nullable
+  hireDate     DateTime
+  avatar       String?
+  status       EmployeeStatus @default(ACTIVE)
+  isDeleted    Boolean        @default(false)
+  deletedAt    DateTime?
+  
+  // Audit properties
+  createdById  String?
+  updatedById  String?
+  deletedById  String?
+  
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  // Relations
+  user         User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([employeeCode])
+  @@index([email])
+  @@index([status])
+  @@index([managerId])
+  @@map("employees")
 }
 ```
 
@@ -197,12 +203,13 @@ model ActivityLog {
 Database lookups can slow down as transaction tables scale. The schema applies database indexes to prevent table-scan performance degradation:
 
 1.  **Single-Column Relation Indexes**:
-    *   `@@index([assigneeId])` on the `tasks` table. Prevents table-scans when compiling tasks for a specific user dashboard query: `SELECT * FROM tasks WHERE assigneeId = $1`.
-    *   `@@index([categoryId])` on the `tasks` table. Speeds up sidebar navigation filters when users select custom categories.
-2.  **Composite Filters Index**:
-    *   `@@index([status, priority])` on the `tasks` table. Enhances API requests combining state values (e.g. searching for `HIGH` priority tasks still stuck in `TODO` status).
-3.  **Unique Indexes**:
-    *   Prisma automatically configures native unique indexes on `User(email)` and `Category(name)`. This speeds up verification checks during login actions and duplicate category prevention logic.
+    *   `@@index([userId])` on the `sessions` table. Prevents table-scans when verifying current sessions.
+    *   `@@index([userId])` on the `auth_logs` table. Enhances log tracking queries.
+    *   `@@index([managerId])` on the `employees` table. Speeds up managers reading their team lists.
+2.  **Unique Indexes**:
+    *   Prisma automatically configures native unique indexes on `User(email)`, `Employee(email)`, and `Employee(employeeCode)`. This speeds up verification checks during signup actions and unique code lookups.
+3.  **Filtered Search Indexes**:
+    *   `@@index([status])` on the `employees` table. Speeds up rendering stats filtered by ACTIVE or ON_LEAVE states.
 
 ---
 

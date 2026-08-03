@@ -685,6 +685,271 @@ Returns structured configurations suitable for responsive Recharts widgets.
 
 ---
 
+## 👥 7. Employee Endpoints
+
+### 7.1 List Employees (Paginated & Filtered)
+Queries employee roster cards.
+*   **Method**: `GET`
+*   **Path**: `/employees`
+*   **Access Control**: Authenticated (ADMIN, MANAGER)
+*   **Query Parameters**:
+    *   `page` (optional, default: `1`)
+    *   `limit` (optional, default: `10`)
+    *   `search` (optional)
+    *   `status` (optional: `ACTIVE | INACTIVE | ON_LEAVE`)
+    *   `designation` (optional)
+    *   `isDeleted` (optional, default: `false` - set to `true` to list trash items)
+    *   `sortBy` (optional)
+    *   `sortOrder` (optional, `asc` | `desc`)
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Employees retrieved successfully.",
+          "data": [
+            {
+              "id": "emp_01a02b03c04d05e0",
+              "employeeCode": "EMP-2026-0001",
+              "firstName": "John",
+              "lastName": "Doe",
+              "email": "john.doe@example.com",
+              "phone": "555-019-2834",
+              "designation": "Software Engineer",
+              "status": "ACTIVE",
+              "hireDate": "2026-08-01T00:00:00.000Z",
+              "avatar": "/uploads/avatars/avatar-1234.png"
+            }
+          ],
+          "pagination": {
+            "page": 1,
+            "limit": 10,
+            "total": 1,
+            "pages": 1
+          }
+        }
+        ```
+
+---
+
+### 7.2 Get Employee By ID
+Fetches details of a single employee.
+*   **Method**: `GET`
+*   **Path**: `/employees/:id`
+*   **Access Control**: Authenticated (ADMIN, MANAGER, or Owner EMPLOYEE)
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Employee details retrieved successfully.",
+          "data": {
+            "id": "emp_01a02b03c04d05e0",
+            "employeeCode": "EMP-2026-0001",
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john.doe@example.com",
+            "phone": "555-019-2834",
+            "designation": "Software Engineer",
+            "status": "ACTIVE",
+            "hireDate": "2026-08-01T00:00:00.000Z",
+            "avatar": "/uploads/avatars/avatar-1234.png"
+          }
+        }
+        ```
+
+---
+
+### 7.3 Create Employee Profile
+Creates a new profile record.
+*   **Method**: `POST`
+*   **Path**: `/employees`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@example.com",
+      "phone": "555-019-2834",
+      "designation": "Software Engineer",
+      "hireDate": "2026-08-01T00:00:00.000Z",
+      "status": "ACTIVE"
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `201 Created`
+        ```json
+        {
+          "success": true,
+          "message": "Employee profile created successfully.",
+          "data": {
+            "id": "emp_01a02b03c04d05e0",
+            "employeeCode": "EMP-2026-0001",
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john.doe@example.com"
+          }
+        }
+        ```
+
+---
+
+### 7.4 Update Employee Profile
+Updates metadata fields.
+*   **Method**: `PATCH`
+*   **Path**: `/employees/:id`
+*   **Access Control**: Authenticated (ADMIN, MANAGER, or Profile Owner)
+*   **Request Body**:
+    ```json
+    {
+      "designation": "Senior Software Engineer"
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Employee profile updated successfully."
+        }
+        ```
+
+---
+
+### 7.5 Soft Delete Employee
+Moves employee to trash.
+*   **Method**: `DELETE`
+*   **Path**: `/employees/:id`
+*   **Access Control**: Admin Only
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Employee profile soft deleted successfully."
+        }
+        ```
+
+---
+
+### 7.6 Restore Employee
+Recovers soft-deleted employee record from trash.
+*   **Method**: `PATCH`
+*   **Path**: `/employees/:id/restore`
+*   **Access Control**: Admin Only
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Employee profile restored successfully."
+        }
+        ```
+
+---
+
+### 7.7 Upload Avatar Image
+Uploads avatar image using multipart request.
+*   **Method**: `PATCH`
+*   **Path**: `/employees/:id/avatar`
+*   **Access Control**: Authenticated (ADMIN or Profile Owner)
+*   **Request Body**: Multipart form data with key `avatar` containing file.
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Avatar uploaded successfully.",
+          "data": {
+            "avatar": "/uploads/avatars/avatar-1234.png"
+          }
+        }
+        ```
+
+---
+
+### 7.8 Bulk Soft Delete
+Deletes multiple employee records in a single call.
+*   **Method**: `DELETE`
+*   **Path**: `/employees/bulk`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "ids": ["emp_01a02b03c04d05e0", "emp_99z88y77x66w55v4"]
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Bulk soft delete operation completed successfully."
+        }
+        ```
+
+---
+
+### 7.9 Bulk Update Status
+Modifies status for multiple records.
+*   **Method**: `PATCH`
+*   **Path**: `/employees/bulk-status`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "ids": ["emp_01a02b03c04d05e0"],
+      "status": "ON_LEAVE"
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Bulk status update completed successfully."
+        }
+        ```
+
+---
+
+### 7.10 Bulk Restore
+Restores multiple soft-deleted employees.
+*   **Method**: `PATCH`
+*   **Path**: `/employees/bulk-restore`
+*   **Access Control**: Admin Only
+*   **Request Body**:
+    ```json
+    {
+      "ids": ["emp_01a02b03c04d05e0"]
+    }
+    ```
+*   **Response Codes & Payloads**:
+    *   `200 OK`
+        ```json
+        {
+          "success": true,
+          "message": "Bulk restore operation completed successfully."
+        }
+        ```
+
+---
+
+### 7.11 Export Employee List
+Downloads employee records as file download blocks.
+*   **Method**: `GET`
+*   **Path**: `/employees/export`
+*   **Access Control**: Authenticated (ADMIN, MANAGER)
+*   **Query Parameters**:
+    *   `format` (`csv` | `xlsx`)
+*   **Response Headers**:
+    *   `Content-Disposition: attachment; filename=employees_export.csv`
+    *   `Content-Type: text/csv`
+*   **Response Payload**: CSV Text string data.
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)

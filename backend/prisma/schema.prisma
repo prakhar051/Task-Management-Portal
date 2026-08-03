@@ -14,6 +14,12 @@ enum Role {
   EMPLOYEE
 }
 
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+}
+
 model User {
   id           String    @id @default(uuid())
   email        String    @unique
@@ -26,6 +32,7 @@ model User {
   // Relations
   sessions     Session[]
   authLogs     AuthLog[]
+  employee     Employee?
 
   @@map("users")
 }
@@ -61,4 +68,39 @@ model AuthLog {
 
   @@index([userId])
   @@map("auth_logs")
+}
+
+model Employee {
+  id           String         @id @default(uuid())
+  employeeCode String         @unique
+  userId       String?        @unique
+  firstName    String
+  lastName     String
+  email        String         @unique
+  phone        String
+  designation  String
+  departmentId String?        // Nullable - future ready
+  managerId    String?        // Nullable
+  hireDate     DateTime
+  avatar       String?
+  status       EmployeeStatus @default(ACTIVE)
+  isDeleted    Boolean        @default(false)
+  deletedAt    DateTime?
+  
+  // Audit properties
+  createdById  String?
+  updatedById  String?
+  deletedById  String?
+  
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  // Relations
+  user         User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([employeeCode])
+  @@index([email])
+  @@index([status])
+  @@index([managerId])
+  @@map("employees")
 }
