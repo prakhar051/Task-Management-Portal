@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #f4f6fe;
+  --color-brand-100: #e9edfd;
+  --color-brand-200: #d3dbfb;
+  --color-brand-300: #adbdf8;
+  --color-brand-400: #7d95f2;
+  --color-brand-500: #4f68eb;
+  --color-brand-600: #3b4ee0;
+  --color-brand-700: #2f3ec8;
+  --color-brand-800: #2b35a3;
+  --color-brand-900: #273183;
+  --color-brand-950: #181b4d;
+
+  --color-slateDark-50: #f8fafc;
+  --color-slateDark-100: #f1f5f9;
+  --color-slateDark-200: #e2e8f0;
+  --color-slateDark-300: #cbd5e1;
+  --color-slateDark-400: #94a3b8;
+  --color-slateDark-500: #64748b;
+  --color-slateDark-600: #475569;
+  --color-slateDark-700: #334155;
+  --color-slateDark-800: #1e293b;
+  --color-slateDark-900: #0f172a;
+  --color-slateDark-950: #020617;
+}
+
+@utility glass {
+  background: rgba(30, 41, 59, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@utility glass-card {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body {
+  @apply bg-slateDark-950 text-slateDark-50 antialiased selection:bg-brand-500 selection:text-white;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slateDark-950;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slateDark-800 rounded-full hover:bg-slateDark-700 transition-colors;
+}
