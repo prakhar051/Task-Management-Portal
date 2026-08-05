@@ -462,6 +462,21 @@ Custom meetings, task deadlines, and project milestones are draggable. Drag oper
 
 ---
 
+## 📅 11. Attendance & Timesheet Architecture (Phase 11)
+
+Phase 11 designs a highly granular work session time-tracker and approval workflow:
+
+### 11.1 High-Resolution Work Sessions
+Daily metrics are decoupled between `Attendance` (storing daily totals) and `WorkSession` (storing chronological timelines). This enables recording unlimited breaks and active periods under a single day without duplicate parent records.
+
+### 11.2 Calculations Recalculator Engine
+Total working hours are computed by summing active session durations, excluding breaks. Daily overtime is calculated automatically as `Working Hours - 8` when total working hours exceed 8 hours.
+
+### 11.3 Correction & Approval Pipeline
+Manual adjustments submit a correction request, preserving original clock states. Upon approval, the engine drops existing sessions, overrides core daily values, and forces totals recalculation, keeping data synced.
+
+---
+
 ## 🔗 Internal Configuration References
 
 To understand how these directories and patterns connect to installation, security, and schema designs:

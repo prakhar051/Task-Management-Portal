@@ -23,7 +23,9 @@ export default function MainLayout() {
     { name: 'Analytics', path: '/analytics', icon: '📈', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
     { name: 'Reports', path: '/reports', icon: '📥', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
     { name: 'Calendar', path: '/calendar', icon: '📅', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Leave Management', path: '/leaves', icon: '🌴', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] }
+    { name: 'Leave Management', path: '/leaves', icon: '🌴', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
+    { name: 'Attendance', path: '/attendance', icon: '⏰', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
+    { name: 'Timesheets', path: '/timesheets', icon: '📝', roles: ['ADMIN', 'MANAGER'] }
   ].filter((link) => link.roles.includes(user.role));
 
   return (

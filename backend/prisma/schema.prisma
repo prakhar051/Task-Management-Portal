@@ -112,6 +112,10 @@ model Employee {
   approvedLeaves     Leave[]          @relation("ApprovedLeaves")
   calendarEvents     CalendarEvent[]  @relation("EmployeeEvents")
   recurringEvents    RecurringEvent[]
+  attendances        Attendance[]     @relation("EmployeeAttendances")
+  attendanceRequests AttendanceRequest[] @relation("EmployeeAttendanceRequests")
+  approvedAttendanceRequests AttendanceRequest[] @relation("ApprovedAttendanceRequests")
+  timesheets         Timesheet[]      @relation("EmployeeTimesheets")
 
   @@index([employeeCode])
   @@index([email])
@@ -615,6 +619,110 @@ model RecurringEvent {
   @@index([employeeId])
   @@map("recurring_events")
 }
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LEAVE
+  HOLIDAY
+}
+
+enum WorkSessionStatus {
+  ACTIVE
+  COMPLETED
+}
+
+enum AttendanceRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Attendance {
+  id             String           @id @default(uuid())
+  employeeId     String
+  date           DateTime         // Date representation (midnight UTC)
+  status         AttendanceStatus @default(PRESENT)
+  clockIn        DateTime?
+  clockOut       DateTime?
+  totalHours     Float            @default(0)
+  overtimeHours  Float            @default(0)
+  breakDuration  Int              @default(0) // duration in minutes
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  // Relations
+  employee       Employee         @relation("EmployeeAttendances", fields: [employeeId], references: [id], onDelete: Cascade)
+  workSessions   WorkSession[]    @relation("AttendanceSessions")
+
+  @@unique([employeeId, date])
+  @@index([employeeId])
+  @@index([date])
+  @@index([status])
+  @@map("attendances")
+}
+
+model WorkSession {
+  id           String            @id @default(uuid())
+  attendanceId String
+  type         String            @default("WORKING") // "WORKING", "BREAK"
+  status       WorkSessionStatus @default(ACTIVE)
+  startTime    DateTime
+  endTime      DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  // Relations
+  attendance   Attendance        @relation("AttendanceSessions", fields: [attendanceId], references: [id], onDelete: Cascade)
+
+  @@map("work_sessions")
+}
+
+model AttendanceRequest {
+  id                String                  @id @default(uuid())
+  employeeId        String
+  date              DateTime
+  requestedStatus   AttendanceStatus?
+  originalClockIn   DateTime?
+  originalClockOut  DateTime?
+  requestedClockIn  DateTime?
+  requestedClockOut  DateTime?
+  reason            String
+  status            AttendanceRequestStatus @default(PENDING)
+  approvedById      String?
+  rejectionReason   String?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  // Relations
+  employee          Employee                @relation("EmployeeAttendanceRequests", fields: [employeeId], references: [id], onDelete: Cascade)
+  approvedBy        Employee?               @relation("ApprovedAttendanceRequests", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([employeeId])
+  @@index([status])
+  @@map("attendance_requests")
+}
+
+model Timesheet {
+  id                   String      @id @default(uuid())
+  employeeId           String
+  startDate            DateTime
+  endDate              DateTime
+  totalRegularHours    Float       @default(0)
+  totalOvertimeHours   Float       @default(0)
+  attendancePercentage Float       @default(0)
+  status               String      @default("APPROVED")
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  // Relations
+  employee             Employee    @relation("EmployeeTimesheets", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("timesheets")
+}
+
 
 
 

@@ -16,6 +16,8 @@ import analyticsRoutes from './routes/analytics.routes.js';
 import reportRoutes from './routes/report.routes.js';
 import calendarRoutes from './routes/calendar.routes.js';
 import leaveRoutes from './routes/leave.routes.js';
+import attendanceRoutes from './routes/attendance.routes.js';
+import timesheetRoutes from './routes/timesheet.routes.js';
 import { contextMiddleware } from './middleware/context.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
@@ -71,6 +73,8 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/leaves', leaveRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/timesheets', timesheetRoutes);
 
 // Global 404 handler for unmatched routes
 app.use(notFoundHandler);

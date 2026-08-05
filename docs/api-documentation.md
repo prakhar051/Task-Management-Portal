@@ -1719,6 +1719,71 @@ All endpoints are protected by `authenticateUser`.
 
 ---
 
+## ⏰ 15. Attendance Endpoints
+
+All endpoints are protected by `authenticateUser`.
+
+### 15.1 List Attendance Logs
+*   **Method**: `GET`
+*   **Path**: `/attendance`
+*   **Query Parameters**: `startDate`, `endDate`, `employeeId`
+*   **Access Control**: Scoped (ADMIN: all, MANAGER: department, EMPLOYEE: personal)
+
+### 15.2 Clock-In
+*   **Method**: `POST`
+*   **Path**: `/attendance/check-in`
+
+### 15.3 Clock-Out
+*   **Method**: `POST`
+*   **Path**: `/attendance/check-out`
+
+### 15.4 Start Break
+*   **Method**: `POST`
+*   **Path**: `/attendance/break/start`
+
+### 15.5 End Break
+*   **Method**: `POST`
+*   **Path**: `/attendance/break/end`
+
+### 15.6 Submit Correction Request
+*   **Method**: `POST`
+*   **Path**: `/attendance/request`
+
+### 15.7 Approve Correction Request
+*   **Method**: `PATCH`
+*   **Path**: `/attendance/request/:id/approve`
+*   **Access Control**: Admin or Manager (if same department)
+
+### 15.8 Reject Correction Request
+*   **Method**: `PATCH`
+*   **Path**: `/attendance/request/:id/reject`
+*   **Access Control**: Admin or Manager (if same department)
+
+---
+
+## 📝 16. Timesheets Endpoints
+
+All endpoints are protected by `authenticateUser`.
+
+### 16.1 List Timesheets
+*   **Method**: `GET`
+*   **Path**: `/timesheets`
+
+### 16.2 Get Timesheet By ID
+*   **Method**: `GET`
+*   **Path**: `/timesheets/:id`
+
+### 16.3 Get Monthly Productivity Summary
+*   **Method**: `GET`
+*   **Path**: `/timesheets/monthly`
+*   **Query Parameters**: `year`, `month`, `employeeId`
+
+### 16.4 Export Timesheets CSV
+*   **Method**: `GET`
+*   **Path**: `/timesheets/export`
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)

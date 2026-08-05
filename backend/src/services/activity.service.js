@@ -1,5 +1,5 @@
 import ActivityRepository from '../repositories/activity.repository.js';
-import prisma from '../config/prisma.js';
+import { prisma } from '../config/db.js';
 import { contextStorage } from '../utils/context.js';
 
 class ActivityService {

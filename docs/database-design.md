@@ -527,6 +527,23 @@ To optimize range searches and lookup queries across calendar and scheduling tab
 
 ---
 
+## ⏰ 8. Attendance & Timesheet Indexes (Phase 11)
+
+To optimize lookup queries and range queries inside the attendance module, database indexes are defined on:
+
+1.  **Attendance Model Indexes**:
+    *   `@@unique([employeeId, date])` — ensures unique clock-in logs per day per employee.
+    *   `@@index([employeeId])` — speeds up employee logs filter queries.
+    *   `@@index([date])` — optimizes date range query speeds.
+    *   `@@index([status])` — optimizes status filters checking.
+2.  **AttendanceRequest Model Indexes**:
+    *   `@@index([employeeId])` — optimizes personal request lists.
+    *   `@@index([status])` — speeds up manager review queues.
+3.  **Timesheet Model Indexes**:
+    *   `@@index([employeeId])` — speeds up personal and team timesheet lookups.
+
+---
+
 ## 🔗 Architecture & API Reference Links
 
 *   To inspect structural diagrams of component topologies: [docs/system-design.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/system-design.md)

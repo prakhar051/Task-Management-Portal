@@ -23,6 +23,8 @@ const Analytics = lazy(() => import('./pages/Analytics'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Calendar = lazy(() => import('./pages/Calendar'));
 const LeaveManagement = lazy(() => import('./pages/LeaveManagement'));
+const Attendance = lazy(() => import('./pages/Attendance'));
+const Timesheets = lazy(() => import('./pages/Timesheets'));
 
 function App() {
   return (
@@ -261,6 +263,38 @@ function App() {
                   </div>
                 }>
                   <LeaveManagement />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Attendance module path */}
+          <Route
+            path="attendance"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Attendance />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Timesheets module path */}
+          <Route
+            path="timesheets"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Timesheets />
                 </Suspense>
               </ProtectedRoute>
             }
