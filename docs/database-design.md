@@ -561,6 +561,23 @@ To optimize file matching, lookup queries, and uploader references speeds:
 
 ---
 
+## 📂 10. Payroll & Salary Management Indexes (Phase 13)
+
+To optimize payroll processing lookups, salary mapping speeds, and payslips indexing:
+
+1.  **SalaryStructure Model Indexes**:
+    *   `@@unique([employeeId])` — ensures one structure per employee.
+2.  **Payroll Model Indexes**:
+    *   `@@unique([month, year])` — prevents duplicate runs for a month.
+3.  **PayrollItem Model Indexes**:
+    *   `@@unique([payrollId, employeeId])` — ensures unique item records per run.
+    *   `@@index([employeeId])` — speeds up historical timeline runs retrieval.
+4.  **Payslip Model Indexes**:
+    *   `@@unique([payrollItemId])` — binds 1-to-1 payslip reference segments.
+    *   `@@unique([payslipNumber])` — guarantees unique payslip serial codes.
+
+---
+
 ## 🔗 Architecture & API Reference Links
 
 *   To inspect structural diagrams of component topologies: [docs/system-design.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/system-design.md)

@@ -226,7 +226,17 @@ Phase 12 implements a complete document registry and decoupled local storage man
 
 ---
 
-## 🚀 13. Deployment Strategies
+## 💳 13. Payroll & Salary Management Module (Phase 13)
+
+Phase 13 introduces a payroll calculation engine and payslips manager:
+1.  **Salary Templates Management**: Sets employee basic salary allocations and associates allowance, bonus, and deduction parameters.
+2.  **Integrated Mathematical Deductions**: Dynamically compiles monthly items, subtracting absences, unpaid leaves, and half-day penalisations, while calculating overtime pay.
+3.  **Progressive Tax Bracket Calculators**: Loops through dynamic database slabs to compute tax withholdings.
+4.  **PDF Payslip Compilation**: Automatically generates payslip PDFs on approval using `pdfkit`.
+
+---
+
+## 🚀 14. Deployment Strategies
 
 The system utilizes a fully automated, cloud-based Continuous Integration and Deployment (CI/CD) setup:
 *   **Frontend Client**: Hosted on **Vercel** with custom rewrite configurations to route SPA links safely to index.html.
@@ -237,13 +247,13 @@ Refer to [docs/installation-deployment.md](file:///c:/Resume%20Project/Task%20Ma
 
 ---
 
-## 📊 14. Challenges, Retrospective & Lessons Learned
+## 📊 15. Challenges, Retrospective & Lessons Learned
 
-### 14.1 Technical Challenges & Mitigations
+### 15.1 Technical Challenges & Mitigations
 *   **Asynchronous Database Bottlenecks**: High concurrent requests to foreign keys led to performance drops. Mitigation involved introducing pooled connections and indexing relationships.
 *   **Stateless Token Expiry UX**: Standard token lifespans disrupted user sessions mid-use. Resolved by using client-side Axios refresh interceptors to extend sessions silently.
 
-### 14.2 Engineering Learning Outcomes
+### 15.2 Engineering Learning Outcomes
 The implementation of the Task Management Portal provided hands-on experience in:
 *   Relational database normalizations and performance indexing.
 *   Building security middleware stacks in Express.js.

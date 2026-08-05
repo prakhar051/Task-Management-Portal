@@ -118,6 +118,8 @@ model Employee {
   timesheets         Timesheet[]      @relation("EmployeeTimesheets")
   uploadedDocuments  Document[]       @relation("DocumentUploader")
   uploadedDocumentVersions DocumentVersion[] @relation("VersionUploader")
+  salaryStructure    SalaryStructure?  @relation("EmployeeSalaryStructure")
+  payrollItems       PayrollItem[]     @relation("EmployeePayrollItems")
 
   @@index([employeeCode])
   @@index([email])
@@ -800,6 +802,135 @@ model DocumentVersion {
   @@index([createdAt])
   @@map("document_versions")
 }
+
+enum PayrollStatus {
+  DRAFT
+  GENERATED
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+enum SalaryComponentType {
+  BASIC
+  ALLOWANCE
+  BONUS
+  DEDUCTION
+  TAX
+  OVERTIME
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  UPI
+  CHEQUE
+}
+
+model SalaryStructure {
+  id           String            @id @default(uuid())
+  employeeId   String            @unique
+  baseSalary   Float
+  currency     String            @default("USD")
+  effectiveFrom DateTime
+  effectiveTo  DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  // Relations
+  employee     Employee          @relation("EmployeeSalaryStructure", fields: [employeeId], references: [id], onDelete: Cascade)
+  components   SalaryComponent[]
+
+  @@map("salary_structures")
+}
+
+model SalaryComponent {
+  id                String              @id @default(uuid())
+  salaryStructureId String
+  name              String
+  type              SalaryComponentType
+  amount            Float
+  isPercentage      Boolean             @default(false)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  // Relations
+  salaryStructure   SalaryStructure     @relation(fields: [salaryStructureId], references: [id], onDelete: Cascade)
+
+  @@map("salary_components")
+}
+
+model Payroll {
+  id          String        @id @default(uuid())
+  month       Int
+  year        Int
+  status      PayrollStatus @default(DRAFT)
+  processedBy String?
+  approvedBy  String?
+  paidAt      DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  items       PayrollItem[]
+
+  @@unique([month, year])
+  @@map("payrolls")
+}
+
+model PayrollItem {
+  id             String         @id @default(uuid())
+  payrollId      String
+  employeeId     String
+  basicSalary    Float
+  allowances     Float          @default(0)
+  bonuses        Float          @default(0)
+  deductions     Float          @default(0)
+  overtimePay    Float          @default(0)
+  tax            Float          @default(0)
+  grossSalary    Float
+  netSalary      Float
+  paymentMethod  PaymentMethod  @default(BANK_TRANSFER)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  // Relations
+  payroll        Payroll        @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+  employee       Employee       @relation("EmployeePayrollItems", fields: [employeeId], references: [id], onDelete: Cascade)
+  payslips       Payslip[]
+
+  @@unique([payrollId, employeeId])
+  @@map("payroll_items")
+}
+
+model Payslip {
+  id            String      @id @default(uuid())
+  payrollItemId String      @unique
+  payslipNumber String      @unique
+  pdfPath       String?
+  sentAt        DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  payrollItem   PayrollItem @relation(fields: [payrollItemId], references: [id], onDelete: Cascade)
+
+  @@map("payslips")
+}
+
+model TaxRule {
+  id          String   @id @default(uuid())
+  name        String
+  minIncome   Float
+  maxIncome   Float?
+  taxRate     Float
+  flatAmount  Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("tax_rules")
+}
+
 
 
 

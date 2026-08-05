@@ -14,19 +14,22 @@ export default function MainLayout() {
   };
 
   const navLinks = [
-    { name: 'Dashboard', path: '/dashboard', icon: '📊', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Employees', path: '/employees', icon: '👥', roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Departments', path: '/departments', icon: '🏢', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Projects', path: '/projects', icon: '📂', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Tasks', path: '/tasks', icon: '📋', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Activity Logs', path: '/activity', icon: '📜', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Analytics', path: '/analytics', icon: '📈', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Reports', path: '/reports', icon: '📥', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Calendar', path: '/calendar', icon: '📅', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Leave Management', path: '/leaves', icon: '🌴', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Attendance', path: '/attendance', icon: '⏰', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] },
-    { name: 'Timesheets', path: '/timesheets', icon: '📝', roles: ['ADMIN', 'MANAGER'] },
-    { name: 'Documents', path: '/documents', icon: '📂', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE'] }
+    { name: 'Dashboard', path: '/dashboard', icon: '📊', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Employees', path: '/employees', icon: '👥', roles: ['ADMIN', 'MANAGER', 'HR'] },
+    { name: 'Departments', path: '/departments', icon: '🏢', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Projects', path: '/projects', icon: '📂', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Tasks', path: '/tasks', icon: '📋', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Activity Logs', path: '/activity', icon: '📜', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Analytics', path: '/analytics', icon: '📈', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Reports', path: '/reports', icon: '📥', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Calendar', path: '/calendar', icon: '📅', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Leave Management', path: '/leaves', icon: '🌴', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Attendance', path: '/attendance', icon: '⏰', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Timesheets', path: '/timesheets', icon: '📝', roles: ['ADMIN', 'MANAGER', 'HR'] },
+    { name: 'Documents', path: '/documents', icon: '📂', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Salary Structures', path: '/salary-structures', icon: '💳', roles: ['ADMIN', 'HR'] },
+    { name: 'Payroll Runs', path: '/payroll', icon: '⚙️', roles: ['ADMIN', 'HR'] },
+    { name: 'My Payslips', path: '/payslips', icon: '🧾', roles: ['EMPLOYEE'] }
   ].filter((link) => link.roles.includes(user.role));
 
   return (

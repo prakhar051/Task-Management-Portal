@@ -27,6 +27,10 @@ const Attendance = lazy(() => import('./pages/Attendance'));
 const Timesheets = lazy(() => import('./pages/Timesheets'));
 const Documents = lazy(() => import('./pages/Documents'));
 const DocumentDetails = lazy(() => import('./pages/DocumentDetails'));
+const SalaryStructure = lazy(() => import('./pages/SalaryStructure'));
+const Payroll = lazy(() => import('./pages/Payroll'));
+const PayrollDetails = lazy(() => import('./pages/PayrollDetails'));
+const Payslip = lazy(() => import('./pages/Payslip'));
 
 function App() {
   return (
@@ -328,6 +332,67 @@ function App() {
                   </div>
                 }>
                   <DocumentDetails />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Payroll and Salaries paths */}
+          <Route
+            path="salary-structures"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <SalaryStructure />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payroll"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Payroll />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payroll/:id"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <PayrollDetails />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payslips"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Payslip />
                 </Suspense>
               </ProtectedRoute>
             }

@@ -1838,6 +1838,74 @@ All endpoints are protected by `authenticateUser`.
 
 ---
 
+## 💳 18. Salaries & Payroll Endpoints
+
+All endpoints are protected by `authenticateUser`.
+
+### 18.1 List Salary Structures
+*   **Method**: `GET`
+*   **Path**: `/salary`
+*   **Access Control**: Admin or HR
+
+### 18.2 Assign Salary Structure
+*   **Method**: `POST`
+*   **Path**: `/salary`
+*   **Access Control**: Admin or HR
+*   **Body JSON**: `{ "employeeId", "baseSalary", "currency", "effectiveFrom", "components" }`
+
+### 18.3 Get Employee Salary Structure
+*   **Method**: `GET`
+*   **Path**: `/salary/employee/:employeeId`
+*   **Access Control**: Admin or HR
+
+### 18.4 Update Salary Structure
+*   **Method**: `PATCH`
+*   **Path**: `/salary/employee/:employeeId`
+*   **Access Control**: Admin or HR
+
+### 18.5 List Payroll Runs
+*   **Method**: `GET`
+*   **Path**: `/payroll`
+*   **Access Control**: Admin or HR
+
+### 18.6 Get Payroll Details
+*   **Method**: `GET`
+*   **Path**: `/payroll/:id`
+*   **Access Control**: Admin or HR
+
+### 18.7 Generate Payroll Draft
+*   **Method**: `POST`
+*   **Path**: `/payroll`
+*   **Access Control**: Admin or HR
+*   **Body JSON**: `{ "month", "year" }`
+
+### 18.8 Approve Payroll Run
+*   **Method**: `PATCH`
+*   **Path**: `/payroll/:id/approve`
+*   **Access Control**: Admin or HR
+
+### 18.9 Disburse Payroll Run Payments
+*   **Method**: `PATCH`
+*   **Path**: `/payroll/:id/pay`
+*   **Access Control**: Admin or HR
+
+### 18.10 Cancel Payroll Run
+*   **Method**: `PATCH`
+*   **Path**: `/payroll/:id/cancel`
+*   **Access Control**: Admin or HR
+
+### 18.11 Download PDF Payslip
+*   **Method**: `GET`
+*   **Path**: `/payroll/payslip/:itemId`
+*   **Access Control**: Admin, HR, or own Employee record
+
+### 18.12 Get Employee Payroll History
+*   **Method**: `GET`
+*   **Path**: `/payroll/history/:employeeId`
+*   **Access Control**: Admin, HR, or own Employee record
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)

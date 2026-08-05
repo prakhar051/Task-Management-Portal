@@ -492,6 +492,21 @@ Instead of deleting or replacing old versions, the service appends new versions 
 
 ---
 
+## 📂 13. Payroll & Salaries Architecture (Phase 13)
+
+Phase 13 introduces an integrated salary processing, tax progressive bracket execution, and PDF compilation engine:
+
+### 13.1 Decoupled Tax Engine
+Tax evaluations are decoupled from core payroll calculations via the `TaxService` wrapper. It executes progressive tax segment loops from dynamic database schemas, eliminating hardcoded percentages.
+
+### 13.2 Immutable Salary Snapshots
+To prevent historical data discrepancies when current salary structures change, payroll calculations write final figures directly to `PayrollItem` records. Once a payroll run is marked as `APPROVED` or `PAID`, its calculated fields are immutable.
+
+### 13.3 PDF payslips generation
+Uses the `pdfkit` write streams to convert relational items (basic, allowances, deductions, taxes) directly into A4 binary assets.
+
+---
+
 ## 🔗 Internal Configuration References
 
 To understand how these directories and patterns connect to installation, security, and schema designs:

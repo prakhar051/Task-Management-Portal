@@ -19,6 +19,8 @@ import leaveRoutes from './routes/leave.routes.js';
 import attendanceRoutes from './routes/attendance.routes.js';
 import timesheetRoutes from './routes/timesheet.routes.js';
 import documentRoutes from './routes/document.routes.js';
+import salaryRoutes from './routes/salary.routes.js';
+import payrollRoutes from './routes/payroll.routes.js';
 import { contextMiddleware } from './middleware/context.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
@@ -78,6 +80,8 @@ app.use('/api/leaves', leaveRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/timesheets', timesheetRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/salary', salaryRoutes);
+app.use('/api/payroll', payrollRoutes);
 
 // Global 404 handler for unmatched routes
 app.use(notFoundHandler);
