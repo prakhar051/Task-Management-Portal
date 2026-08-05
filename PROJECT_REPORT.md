@@ -216,7 +216,17 @@ Phase 11 implements a complete Attendance tracking and Timesheets compilation en
 
 ---
 
-## 🚀 12. Deployment Strategies
+## 📂 12. Document & File Management Module (Phase 12)
+
+Phase 12 implements a complete document registry and decoupled local storage manager:
+1.  **Storage Provider Abstraction**: Exposes `StorageProvider` contracts, enabling switching from local filesystem drives to cloud directories without changing backend controller workflows.
+2.  **MIME & Extension Guard Validation**: Blocks executables like `.exe` and `.sh` files, limits sizing uploads up to 20 MB, and computes SHA256 checksum hashes.
+3.  **Versioning History Registry**: Appends subsequent uploads of the same files as version segments (`DocumentVersion`) without replacing old revisions.
+4.  **Bulk Downloads Zip Generation**: Integrates node `archiver` libraries to compile selected arrays of document streams on-the-fly to a ZIP format.
+
+---
+
+## 🚀 13. Deployment Strategies
 
 The system utilizes a fully automated, cloud-based Continuous Integration and Deployment (CI/CD) setup:
 *   **Frontend Client**: Hosted on **Vercel** with custom rewrite configurations to route SPA links safely to index.html.
@@ -227,13 +237,13 @@ Refer to [docs/installation-deployment.md](file:///c:/Resume%20Project/Task%20Ma
 
 ---
 
-## 📊 13. Challenges, Retrospective & Lessons Learned
+## 📊 14. Challenges, Retrospective & Lessons Learned
 
-### 13.1 Technical Challenges & Mitigations
+### 14.1 Technical Challenges & Mitigations
 *   **Asynchronous Database Bottlenecks**: High concurrent requests to foreign keys led to performance drops. Mitigation involved introducing pooled connections and indexing relationships.
 *   **Stateless Token Expiry UX**: Standard token lifespans disrupted user sessions mid-use. Resolved by using client-side Axios refresh interceptors to extend sessions silently.
 
-### 13.2 Engineering Learning Outcomes
+### 14.2 Engineering Learning Outcomes
 The implementation of the Task Management Portal provided hands-on experience in:
 *   Relational database normalizations and performance indexing.
 *   Building security middleware stacks in Express.js.

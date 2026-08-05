@@ -477,6 +477,21 @@ Manual adjustments submit a correction request, preserving original clock states
 
 ---
 
+## 📂 12. Document & Storage Architecture (Phase 12)
+
+Phase 12 introduces a storage abstraction and custom file-versioning system:
+
+### 12.1 Storage Decoupling Interface
+File system input/output operations are encapsulated inside `StorageProvider` templates. Moving from disk files to cloud directories (e.g. AWS S3 buckets) requires overriding the provider implementation classes, keeping controller routers and database service layers unchanged.
+
+### 12.2 Checksum & Security Guard Filters
+Prior to storing documents, files are verified for size limits (max 20 MB) and extension restrictions. Executable payloads are discarded. The system generates SHA256 checksums to verify integrity.
+
+### 12.3 Versioning Engine
+Instead of deleting or replacing old versions, the service appends new versions sequentially. Old records remain downloadable.
+
+---
+
 ## 🔗 Internal Configuration References
 
 To understand how these directories and patterns connect to installation, security, and schema designs:

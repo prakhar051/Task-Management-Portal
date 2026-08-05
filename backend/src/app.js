@@ -18,6 +18,7 @@ import calendarRoutes from './routes/calendar.routes.js';
 import leaveRoutes from './routes/leave.routes.js';
 import attendanceRoutes from './routes/attendance.routes.js';
 import timesheetRoutes from './routes/timesheet.routes.js';
+import documentRoutes from './routes/document.routes.js';
 import { contextMiddleware } from './middleware/context.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
@@ -39,10 +40,11 @@ app.use(cors({
 
 // Serve static avatars uploads folder publicly
 app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
+app.use('/uploads/documents', express.static(path.join(process.cwd(), 'uploads')));
 
 // Parse body JSON payloads (limit size to prevent raw buffer overflow attacks)
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Parse request cookies
 app.use(cookieParser());
@@ -75,6 +77,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/timesheets', timesheetRoutes);
+app.use('/api/documents', documentRoutes);
 
 // Global 404 handler for unmatched routes
 app.use(notFoundHandler);

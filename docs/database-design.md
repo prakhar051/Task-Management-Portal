@@ -544,6 +544,23 @@ To optimize lookup queries and range queries inside the attendance module, datab
 
 ---
 
+## 📂 9. Document & File Management Indexes (Phase 12)
+
+To optimize file matching, lookup queries, and uploader references speeds:
+
+1.  **Document Model Indexes**:
+    *   `@@index([entityType])` — speeds up reference scope grouping.
+    *   `@@index([entityId])` — optimizes matching entity references lookups.
+    *   `@@index([uploadedById])` — optimizes uploader employee details lookups.
+    *   `@@index([createdAt])` — speeds up sorted lists.
+    *   `@@index([status])` — speeds up status lookups.
+2.  **DocumentVersion Model Indexes**:
+    *   `@@unique([documentId, versionNumber])` — prevents version number duplication.
+    *   `@@index([documentId])` — speeds up version list queries.
+    *   `@@index([uploadedById])` — optimizes revision author tracking lookups.
+
+---
+
 ## 🔗 Architecture & API Reference Links
 
 *   To inspect structural diagrams of component topologies: [docs/system-design.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/system-design.md)

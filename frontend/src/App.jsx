@@ -25,6 +25,8 @@ const Calendar = lazy(() => import('./pages/Calendar'));
 const LeaveManagement = lazy(() => import('./pages/LeaveManagement'));
 const Attendance = lazy(() => import('./pages/Attendance'));
 const Timesheets = lazy(() => import('./pages/Timesheets'));
+const Documents = lazy(() => import('./pages/Documents'));
+const DocumentDetails = lazy(() => import('./pages/DocumentDetails'));
 
 function App() {
   return (
@@ -295,6 +297,37 @@ function App() {
                   </div>
                 }>
                   <Timesheets />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Documents module paths */}
+          <Route
+            path="documents"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Documents />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="documents/:id"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <DocumentDetails />
                 </Suspense>
               </ProtectedRoute>
             }

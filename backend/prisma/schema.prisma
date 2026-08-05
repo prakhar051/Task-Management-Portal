@@ -116,6 +116,8 @@ model Employee {
   attendanceRequests AttendanceRequest[] @relation("EmployeeAttendanceRequests")
   approvedAttendanceRequests AttendanceRequest[] @relation("ApprovedAttendanceRequests")
   timesheets         Timesheet[]      @relation("EmployeeTimesheets")
+  uploadedDocuments  Document[]       @relation("DocumentUploader")
+  uploadedDocumentVersions DocumentVersion[] @relation("VersionUploader")
 
   @@index([employeeCode])
   @@index([email])
@@ -722,6 +724,83 @@ model Timesheet {
   @@index([employeeId])
   @@map("timesheets")
 }
+
+enum DocumentEntityType {
+  EMPLOYEE
+  PROJECT
+  TASK
+  DEPARTMENT
+  LEAVE
+  ATTENDANCE
+  GENERAL
+}
+
+enum DocumentCategory {
+  PROFILE
+  CONTRACT
+  REPORT
+  IMAGE
+  PDF
+  SPREADSHEET
+  OTHER
+}
+
+enum DocumentStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+model Document {
+  id           String             @id @default(uuid())
+  name         String
+  entityType   DocumentEntityType
+  entityId     String?
+  category     DocumentCategory
+  status       DocumentStatus     @default(ACTIVE)
+  uploadedById String
+  isDeleted    Boolean            @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  // Relations
+  uploadedBy   Employee           @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: Cascade)
+  versions     DocumentVersion[]  @relation("DocumentVersions")
+
+  @@index([entityType])
+  @@index([entityId])
+  @@index([uploadedById])
+  @@index([createdAt])
+  @@index([status])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id               String   @id @default(uuid())
+  documentId       String
+  versionNumber    Int
+  originalFilename String
+  storedFilename   String
+  extension        String
+  mimeType         String
+  fileSize         Int
+  checksum         String?
+  filePath         String
+  uploadedById     String
+  createdAt        DateTime @default(now())
+
+  // Relations
+  document         Document @relation("DocumentVersions", fields: [documentId], references: [id], onDelete: Cascade)
+  uploadedBy       Employee @relation("VersionUploader", fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, versionNumber])
+  @@index([documentId])
+  @@index([uploadedById])
+  @@index([createdAt])
+  @@map("document_versions")
+}
+
 
 
 

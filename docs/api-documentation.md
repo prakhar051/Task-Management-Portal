@@ -1784,6 +1784,60 @@ All endpoints are protected by `authenticateUser`.
 
 ---
 
+## 📂 17. Documents Endpoints
+
+All endpoints are protected by `authenticateUser`.
+
+### 17.1 List Documents
+*   **Method**: `GET`
+*   **Path**: `/documents`
+*   **Query Parameters**: `search`, `category`, `entityType`, `entityId`, `page`, `limit`
+
+### 17.2 Get Document Details
+*   **Method**: `GET`
+*   **Path**: `/documents/:id`
+
+### 17.3 Upload Document
+*   **Method**: `POST`
+*   **Path**: `/documents`
+*   **Headers**: `Content-Type: multipart/form-data`
+*   **Body Form Data**: `file` (binary), `name`, `category`, `entityType`, `entityId`
+
+### 17.4 Upload New Document Revision
+*   **Method**: `POST`
+*   **Path**: `/documents/:id/version`
+*   **Headers**: `Content-Type: multipart/form-data`
+*   **Body Form Data**: `file` (binary)
+
+### 17.5 Download Document
+*   **Method**: `GET`
+*   **Path**: `/documents/:id/download`
+*   **Query Parameters**: `version` (optional version number)
+
+### 17.6 Preview Document Inline
+*   **Method**: `GET`
+*   **Path**: `/documents/:id/preview`
+*   **Query Parameters**: `version` (optional version number)
+
+### 17.7 Bulk Download ZIP
+*   **Method**: `POST`
+*   **Path**: `/documents/bulk-download`
+*   **Body JSON**: `{ "documentIds": ["uuid-1", "uuid-2"] }`
+
+### 17.8 Archive Document
+*   **Method**: `PATCH`
+*   **Path**: `/documents/:id/archive`
+
+### 17.9 Restore Document
+*   **Method**: `PATCH`
+*   **Path**: `/documents/:id/restore`
+
+### 17.10 Soft Delete Document
+*   **Method**: `DELETE`
+*   **Path**: `/documents/:id`
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)

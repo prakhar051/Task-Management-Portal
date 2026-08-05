@@ -30,6 +30,7 @@ Explore the deep technical implementation and design choices behind this project
 | **📈 Analytics & Reports** | Server-side aggregates, cache wrappers, XLSX & PDF generators | [docs/analytics-reports.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/analytics-reports.md) |
 | **📅 Calendar & Leaves** | Unified feed, recurrence engines, leave workflows, drag-drop updates | [docs/calendar-module.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/calendar-module.md) |
 | **⏰ Attendance & Timesheets** | Work session tracking, break timers, overtime and percentage engines | [docs/attendance-module.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/attendance-module.md) |
+| **📂 Documents & Storage** | Decoupled storage providers, checksum verification, versioning histories | [docs/document-module.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/document-module.md) |
 
 ---
 
