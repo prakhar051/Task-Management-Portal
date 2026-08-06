@@ -38,6 +38,11 @@ const Candidates = lazy(() => import('./pages/Candidates'));
 const CandidateDetails = lazy(() => import('./pages/CandidateDetails'));
 const InterviewCalendar = lazy(() => import('./pages/InterviewCalendar'));
 const Offers = lazy(() => import('./pages/Offers'));
+const Assets = lazy(() => import('./pages/Assets'));
+const AssetDetails = lazy(() => import('./pages/AssetDetails'));
+const AssetAssignments = lazy(() => import('./pages/AssetAssignments'));
+const Maintenance = lazy(() => import('./pages/Maintenance'));
+const Vendors = lazy(() => import('./pages/Vendors'));
 
 function App() {
   return (
@@ -506,6 +511,78 @@ function App() {
                   </div>
                 }>
                   <Offers />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Asset Management Module routes */}
+          <Route
+            path="assets"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Assets />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="assets/:id"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <AssetDetails />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="assets/assignments"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <AssetAssignments />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="maintenance"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Maintenance />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="vendors"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Vendors />
                 </Suspense>
               </ProtectedRoute>
             }

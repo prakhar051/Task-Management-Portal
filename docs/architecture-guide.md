@@ -522,6 +522,20 @@ Coordinates panels with double-booking validation, verifying overlap across inte
 
 ---
 
+## 📂 15. Asset Management & Inventory Architecture (Phase 15)
+
+Phase 15 implements enterprise hardware inventory tracking, assignments, and calculations:
+
+### 15.1 Resilient Assign & Transfer Workflows
+To support smooth administrative flows, `AssetService` checks user profile parameters to dynamically resolve employee associations. This bypasses missing foreign key constraints when administrators without employee details execute assignments.
+
+### 15.2 Straight-Line & Declining-Balance Depreciation Engines
+Provides calculations executing:
+- **Straight Line**: `((Cost - Salvage) / UsefulLifeYears) / 12`
+- **Declining Balance**: `(CurrentBookValue * (Factor / UsefulLifeYears)) / 12` (Double-declining factor is 2.0).
+
+---
+
 ## 🔗 Internal Configuration References
 
 To understand how these directories and patterns connect to installation, security, and schema designs:

@@ -593,6 +593,19 @@ To optimize recruitment pipeline boards searches and index matching performance:
 
 ---
 
+## 📂 12. Asset Management & Inventory Indexes (Phase 15)
+
+To optimize asset inventory boards and depreciation calculations:
+
+1.  **AssetCategory Model Indexes**:
+    *   `@@unique([name])` / `@@unique([code])` — ensures unique categorisation references.
+2.  **Asset Model Indexes**:
+    *   `@@unique([tag])` — guarantees unique hardware inventory barcodes and tags.
+3.  **PurchaseOrder Model Indexes**:
+    *   `@@unique([poNumber])` — ensures unique order tracking numbers.
+
+---
+
 ## 🔗 Architecture & API Reference Links
 
 *   To inspect structural diagrams of component topologies: [docs/system-design.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/system-design.md)

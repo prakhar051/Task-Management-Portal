@@ -25,6 +25,9 @@ import jobRoutes from './routes/job.routes.js';
 import candidateRoutes from './routes/candidate.routes.js';
 import interviewRoutes from './routes/interview.routes.js';
 import offerRoutes from './routes/offer.routes.js';
+import assetRoutes from './routes/asset.routes.js';
+import maintenanceRoutes from './routes/maintenance.routes.js';
+import vendorRoutes from './routes/vendor.routes.js';
 import { contextMiddleware } from './middleware/context.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
@@ -90,6 +93,9 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/interviews', interviewRoutes);
 app.use('/api/offers', offerRoutes);
+app.use('/api/assets', assetRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/vendors', vendorRoutes);
 
 // Global 404 handler for unmatched routes
 app.use(notFoundHandler);

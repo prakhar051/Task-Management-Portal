@@ -36,6 +36,7 @@ model User {
   notifications Notification[] @relation("UserNotifications")
   preferences  NotificationPreference? @relation("UserPreferences")
   activities   ActivityLog[]  @relation("UserActivities")
+  assetHistoryLogs AssetHistory[] @relation("UserAssetHistory")
 
   @@map("users")
 }
@@ -124,6 +125,12 @@ model Employee {
   panelInterviews    InterviewPanelMember[] @relation("PanelMemberEmployee")
   interviewerFeedbacks InterviewFeedback[]  @relation("InterviewerFeedback")
   stageHistoryChanges CandidateStageHistory[] @relation("StageHistoryChanger")
+  assignedAssets     Asset[]           @relation("EmployeeAssets")
+  assetAssignments   AssetAssignment[] @relation("EmployeeAssetAssignments")
+  createdAssignments AssetAssignment[] @relation("AssignedByEmployee")
+  transferredFrom    AssetTransfer[]   @relation("TransferredFromEmployee")
+  transferredTo      AssetTransfer[]   @relation("TransferredToEmployee")
+  createdTransfers   AssetTransfer[]   @relation("TransferredByEmployee")
 
   @@index([employeeCode])
   @@index([email])
@@ -163,6 +170,7 @@ model Department {
   manager      Employee?        @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
   projects     Project[]        @relation("DepartmentProjects")
   jobs         JobOpening[]     @relation("DepartmentJobs")
+  assets       Asset[]          @relation("DepartmentAssets")
 
   @@index([code])
   @@index([status])
@@ -742,6 +750,8 @@ enum DocumentEntityType {
   ATTENDANCE
   GENERAL
   RECRUITMENT
+  ASSET
+  MAINTENANCE
 }
 
 enum DocumentCategory {
@@ -1132,6 +1142,207 @@ model CandidateStageHistory {
   changedBy   Employee  @relation("StageHistoryChanger", fields: [changedById], references: [id], onDelete: Cascade)
 
   @@map("candidate_stage_history")
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ASSIGNED
+  UNDER_MAINTENANCE
+  LOST
+  DAMAGED
+  RETIRED
+}
+
+enum AssetCondition {
+  NEW
+  GOOD
+  FAIR
+  POOR
+  DAMAGED
+}
+
+enum MaintenanceStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum DepreciationMethod {
+  STRAIGHT_LINE
+  DECLINING_BALANCE
+}
+
+model AssetCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assets      Asset[]
+
+  @@map("asset_categories")
+}
+
+model Vendor {
+  id             String          @id @default(uuid())
+  name           String          @unique
+  contactName    String?
+  email          String?
+  phone          String?
+  address        String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  assets         Asset[]
+  purchaseOrders PurchaseOrder[]
+
+  @@map("vendors")
+}
+
+model Asset {
+  id                  String               @id @default(uuid())
+  tag                 String               @unique
+  name                String
+  serialNumber        String?
+  categoryId          String
+  vendorId            String?
+  status              AssetStatus          @default(AVAILABLE)
+  condition           AssetCondition       @default(NEW)
+  purchasePrice       Float
+  salvageValue        Float                @default(0)
+  usefulLifeYears     Int                  @default(5)
+  purchaseDate        DateTime
+  warrantyExpiry      DateTime?
+  description         String?
+  location            String?
+  qrCodeUrl           String?
+  barcodeUrl          String?
+  departmentId        String?
+  currentEmployeeId   String?
+  purchaseOrderId     String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  // Relations
+  category            AssetCategory        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  vendor              Vendor?              @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  department          Department?          @relation("DepartmentAssets", fields: [departmentId], references: [id], onDelete: SetNull)
+  currentEmployee     Employee?            @relation("EmployeeAssets", fields: [currentEmployeeId], references: [id], onDelete: SetNull)
+  purchaseOrder       PurchaseOrder?       @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  assignments         AssetAssignment[]
+  transfers           AssetTransfer[]
+  maintenanceRecords  MaintenanceRecord[]
+  history             AssetHistory[]
+  depreciationRecords DepreciationRecord[]
+
+  @@map("assets")
+}
+
+model AssetAssignment {
+  id                String         @id @default(uuid())
+  assetId           String
+  employeeId        String
+  assignedAt        DateTime       @default(now())
+  returnedAt        DateTime?
+  conditionOnAssign AssetCondition
+  conditionOnReturn AssetCondition?
+  notes             String?
+  assignedById      String
+
+  // Relations
+  asset             Asset          @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  employee          Employee       @relation("EmployeeAssetAssignments", fields: [employeeId], references: [id], onDelete: Cascade)
+  assignedBy        Employee       @relation("AssignedByEmployee", fields: [assignedById], references: [id], onDelete: Cascade)
+
+  @@map("asset_assignments")
+}
+
+model AssetTransfer {
+  id              String   @id @default(uuid())
+  assetId         String
+  fromEmployeeId  String?
+  toEmployeeId    String
+  transferredAt   DateTime @default(now())
+  notes           String?
+  transferredById String
+
+  // Relations
+  asset           Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  fromEmployee    Employee? @relation("TransferredFromEmployee", fields: [fromEmployeeId], references: [id], onDelete: SetNull)
+  toEmployee      Employee  @relation("TransferredToEmployee", fields: [toEmployeeId], references: [id], onDelete: Cascade)
+  transferredBy   Employee  @relation("TransferredByEmployee", fields: [transferredById], references: [id], onDelete: Cascade)
+
+  @@map("asset_transfers")
+}
+
+model MaintenanceRecord {
+  id            String            @id @default(uuid())
+  assetId       String
+  title         String
+  description   String?
+  cost          Float             @default(0)
+  scheduledDate DateTime
+  startDate     DateTime?
+  endDate       DateTime?
+  status        MaintenanceStatus @default(SCHEDULED)
+  performedBy   String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  // Relations
+  asset         Asset             @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("maintenance_records")
+}
+
+model AssetHistory {
+  id          String   @id @default(uuid())
+  assetId     String
+  action      String
+  description String
+  userId      String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user        User?    @relation("UserAssetHistory", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("asset_history")
+}
+
+model PurchaseOrder {
+  id          String   @id @default(uuid())
+  poNumber    String   @unique
+  vendorId    String
+  orderDate   DateTime
+  totalAmount Float
+  status      String   @default("DRAFT")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  assets      Asset[]
+
+  @@map("purchase_orders")
+}
+
+model DepreciationRecord {
+  id               String             @id @default(uuid())
+  assetId          String
+  depreciationDate DateTime
+  depreciatedValue Float
+  bookValue        Float
+  method           DepreciationMethod
+  createdAt        DateTime           @default(now())
+
+  // Relations
+  asset            Asset              @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("depreciation_records")
 }
 
 

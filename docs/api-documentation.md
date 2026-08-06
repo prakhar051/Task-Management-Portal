@@ -1984,6 +1984,73 @@ All endpoints are protected by `authenticateUser`.
 
 ---
 
+## 🏷️ 20. Asset Management & Inventory Endpoints
+
+All endpoints are protected by `authenticateUser`.
+
+### 20.1 List Assets
+*   **Method**: `GET`
+*   **Path**: `/assets`
+*   **Access Control**: Admin, Manager, or Employee (Employee sees own assigned assets only)
+
+### 20.2 Register Asset
+*   **Method**: `POST`
+*   **Path**: `/assets`
+*   **Access Control**: Admin only
+*   **Body JSON**: `{ "tag", "name", "serialNumber", "categoryId", "vendorId", "purchasePrice", "salvageValue", "usefulLifeYears", "purchaseDate", "warrantyExpiry", "location", "description" }`
+
+### 20.3 Update Asset details
+*   **Method**: `PATCH`
+*   **Path**: `/assets/:id`
+*   **Access Control**: Admin only
+
+### 20.4 Delete Asset
+*   **Method**: `DELETE`
+*   **Path**: `/assets/:id`
+*   **Access Control**: Admin only
+
+### 20.5 Assign Asset
+*   **Method**: `POST`
+*   **Path**: `/assets/assign`
+*   **Access Control**: Admin or Manager
+*   **Body JSON**: `{ "assetId", "employeeId", "conditionOnAssign", "notes" }`
+
+### 20.6 Register returned Asset
+*   **Method**: `PATCH`
+*   **Path**: `/assets/return/:assignmentId`
+*   **Access Control**: Admin or Manager
+*   **Body JSON**: `{ "conditionOnReturn", "notes" }`
+
+### 20.7 Transfer Asset assignment
+*   **Method**: `POST`
+*   **Path**: `/assets/transfer`
+*   **Access Control**: Admin or Manager
+*   **Body JSON**: `{ "assetId", "toEmployeeId", "notes" }`
+
+### 20.8 Calculate monthly depreciation
+*   **Method**: `POST`
+*   **Path**: `/assets/depreciation`
+*   **Access Control**: Admin or Manager
+*   **Body JSON**: `{ "assetId", "method", "months" }`
+
+### 20.9 Create maintenance schedule
+*   **Method**: `POST`
+*   **Path**: `/maintenance`
+*   **Access Control**: Admin or Manager
+*   **Body JSON**: `{ "assetId", "title", "description", "cost", "scheduledDate", "status" }`
+
+### 20.10 Update maintenance status
+*   **Method**: `PATCH`
+*   **Path**: `/maintenance/:id`
+*   **Access Control**: Admin or Manager
+
+### 20.11 List maintenance logs
+*   **Method**: `GET`
+*   **Path**: `/maintenance`
+*   **Access Control**: Admin or Manager
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)

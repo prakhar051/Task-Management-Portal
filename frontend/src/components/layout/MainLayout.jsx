@@ -30,7 +30,8 @@ export default function MainLayout() {
     { name: 'Salary Structures', path: '/salary-structures', icon: '💳', roles: ['ADMIN', 'HR'] },
     { name: 'Payroll Runs', path: '/payroll', icon: '⚙️', roles: ['ADMIN', 'HR'] },
     { name: 'My Payslips', path: '/payslips', icon: '🧾', roles: ['EMPLOYEE'] },
-    { name: 'Recruitment', path: '/recruitment', icon: '🎯', roles: ['ADMIN', 'MANAGER', 'HR'] }
+    { name: 'Recruitment', path: '/recruitment', icon: '🎯', roles: ['ADMIN', 'MANAGER', 'HR'] },
+    { name: 'Assets & Inventory', path: '/assets', icon: '🏷️', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] }
   ].filter((link) => link.roles.includes(user.role));
 
   return (

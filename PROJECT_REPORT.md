@@ -246,7 +246,17 @@ Phase 14 delivers an ATS pipeline:
 
 ---
 
-## 🚀 15. Deployment Strategies
+## 🏷️ 15. Asset Management & Inventory Module (Phase 15)
+
+Phase 15 implements enterprise inventory tracking, depreciation calculators, and assignments:
+1.  **Hardware Registry Catalogues**: Tracks serial numbers, category types, purchase price, useful life, and locations.
+2.  **Double-Declining Balance depreciation**: ProvidesStraight-Line and Double-Declining calculations stored monthly.
+3.  **Active QR & Barcode generation**: Generates real working download tags for assets.
+4.  **Resilient assignments & transfers**: Resolves missing profile constraints dynamically.
+
+---
+
+## 🚀 16. Deployment Strategies
 
 The system utilizes a fully automated, cloud-based Continuous Integration and Deployment (CI/CD) setup:
 *   **Frontend Client**: Hosted on **Vercel** with custom rewrite configurations to route SPA links safely to index.html.
@@ -257,13 +267,13 @@ Refer to [docs/installation-deployment.md](file:///c:/Resume%20Project/Task%20Ma
 
 ---
 
-## 📊 16. Challenges, Retrospective & Lessons Learned
+## 📊 17. Challenges, Retrospective & Lessons Learned
 
-### 16.1 Technical Challenges & Mitigations
+### 17.1 Technical Challenges & Mitigations
 *   **Asynchronous Database Bottlenecks**: High concurrent requests to foreign keys led to performance drops. Mitigation involved introducing pooled connections and indexing relationships.
 *   **Stateless Token Expiry UX**: Standard token lifespans disrupted user sessions mid-use. Resolved by using client-side Axios refresh interceptors to extend sessions silently.
 
-### 16.2 Engineering Learning Outcomes
+### 17.2 Engineering Learning Outcomes
 The implementation of the Task Management Portal provided hands-on experience in:
 *   Relational database normalizations and performance indexing.
 *   Building security middleware stacks in Express.js.
