@@ -236,7 +236,17 @@ Phase 13 introduces a payroll calculation engine and payslips manager:
 
 ---
 
-## 🚀 14. Deployment Strategies
+## 🎯 14. Recruitment & Applicant Tracking System (Phase 14)
+
+Phase 14 delivers an ATS pipeline:
+1.  **Job Publishing Roster**: Configures department locations, hiring managers, and requirements summaries.
+2.  **Duplicate Candidate Prevention**: Utilizes email-phone compound indexing guards to prevent candidate record duplicates.
+3.  **Conflict Schedulers**: Validates interviewer slots to prevent double-booking meetings.
+4.  **Hiring Pipeline Transactions**: Automatically binds user account provision, employee folder directory mapping, onboarding task allocations, and notification alerts within an atomic database transaction.
+
+---
+
+## 🚀 15. Deployment Strategies
 
 The system utilizes a fully automated, cloud-based Continuous Integration and Deployment (CI/CD) setup:
 *   **Frontend Client**: Hosted on **Vercel** with custom rewrite configurations to route SPA links safely to index.html.
@@ -247,13 +257,13 @@ Refer to [docs/installation-deployment.md](file:///c:/Resume%20Project/Task%20Ma
 
 ---
 
-## 📊 15. Challenges, Retrospective & Lessons Learned
+## 📊 16. Challenges, Retrospective & Lessons Learned
 
-### 15.1 Technical Challenges & Mitigations
+### 16.1 Technical Challenges & Mitigations
 *   **Asynchronous Database Bottlenecks**: High concurrent requests to foreign keys led to performance drops. Mitigation involved introducing pooled connections and indexing relationships.
 *   **Stateless Token Expiry UX**: Standard token lifespans disrupted user sessions mid-use. Resolved by using client-side Axios refresh interceptors to extend sessions silently.
 
-### 15.2 Engineering Learning Outcomes
+### 16.2 Engineering Learning Outcomes
 The implementation of the Task Management Portal provided hands-on experience in:
 *   Relational database normalizations and performance indexing.
 *   Building security middleware stacks in Express.js.

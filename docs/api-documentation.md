@@ -1906,6 +1906,84 @@ All endpoints are protected by `authenticateUser`.
 
 ---
 
+## 🎯 19. Recruitment & Applicant Tracking (ATS) Endpoints
+
+All endpoints are protected by `authenticateUser`.
+
+### 19.1 List Job Openings
+*   **Method**: `GET`
+*   **Path**: `/jobs`
+*   **Access Control**: Admin or Manager
+
+### 19.2 Create Job Opening
+*   **Method**: `POST`
+*   **Path**: `/jobs`
+*   **Access Control**: Admin only
+*   **Body JSON**: `{ "title", "description", "requirements", "departmentId", "hiringManagerId", "status" }`
+
+### 19.3 Update Job Opening
+*   **Method**: `PATCH`
+*   **Path**: `/jobs/:id`
+*   **Access Control**: Admin only
+
+### 19.4 Delete Job Opening
+*   **Method**: `DELETE`
+*   **Path**: `/jobs/:id`
+*   **Access Control**: Admin only
+
+### 19.5 List Candidates
+*   **Method**: `GET`
+*   **Path**: `/candidates`
+*   **Access Control**: Admin or Manager
+
+### 19.6 Register Candidate Profile
+*   **Method**: `POST`
+*   **Path**: `/candidates`
+*   **Access Control**: Admin only
+*   **Body JSON**: `{ "jobOpeningId", "firstName", "lastName", "email", "phone", "status" }`
+
+### 19.7 Advance Pipeline Stage
+*   **Method**: `PATCH`
+*   **Path**: `/candidates/:id/stage`
+*   **Access Control**: Admin only
+*   **Body JSON**: `{ "stage" }`
+
+### 19.8 Hire Candidate Transaction
+*   **Method**: `POST`
+*   **Path**: `/candidates/:id/hire`
+*   **Access Control**: Admin only
+*   **Body JSON**: `{ "employeeCode" }`
+
+### 19.9 Schedule Interview Round
+*   **Method**: `POST`
+*   **Path**: `/interviews`
+*   **Access Control**: Admin only
+*   **Body JSON**: `{ "candidateId", "title", "type", "scheduledAt", "durationMinutes", "panelEmployeeIds" }`
+
+### 19.10 Reschedule Interview Round
+*   **Method**: `PATCH`
+*   **Path**: `/interviews/:id`
+*   **Access Control**: Admin only
+
+### 19.11 Cancel Interview Round
+*   **Method**: `DELETE`
+*   **Path**: `/interviews/:id`
+*   **Access Control**: Admin only
+
+### 19.12 Submit Interview Feedback Scorecard
+*   **Method**: `POST`
+*   **Path**: `/interviews/:id/feedback`
+*   **Access Control**: Admin or Manager
+*   **Body JSON**: `{ "score", "comments", "result" }`
+
+### 19.13 Draft Job Offer Letter
+*   **Method**: `POST`
+*   **Path**: `/offers`
+*   **Access Control**: Admin only
+*   **Body JSON**: `{ "candidateId", "jobOpeningId", "grossSalary", "expiresAt" }`
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)

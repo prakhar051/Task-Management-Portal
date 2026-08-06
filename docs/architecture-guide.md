@@ -507,6 +507,21 @@ Uses the `pdfkit` write streams to convert relational items (basic, allowances, 
 
 ---
 
+## 📂 14. Recruitment & ATS Architecture (Phase 14)
+
+Phase 14 introduces a fully integrated Applicant Tracking System linking candidate documents, calendar meetings, and transactional employee creators:
+
+### 14.1 Transactional Hiring Workflow
+The hiring process is bound within a single Prisma transaction (`prisma.$transaction`). This wraps user account registration, employee profile directory setups, document re-linking, onboarding task creation, welcome notifications, and audit logging into an atomic group. Any runtime error triggers an automatic database rollback.
+
+### 14.2 AI-Ready Resume Parser Interface
+An interface layer `ResumeParserInterface` wraps resume processing logic. This decouples file uploads from core services, allowing AI resume parsers to be plugged in without changing downstream controller code.
+
+### 14.3 Multi-round Panel scheduling
+Coordinates panels with double-booking validation, verifying overlap across interviewers' calendar slots.
+
+---
+
 ## 🔗 Internal Configuration References
 
 To understand how these directories and patterns connect to installation, security, and schema designs:

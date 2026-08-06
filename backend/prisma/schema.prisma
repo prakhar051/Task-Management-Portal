@@ -120,6 +120,10 @@ model Employee {
   uploadedDocumentVersions DocumentVersion[] @relation("VersionUploader")
   salaryStructure    SalaryStructure?  @relation("EmployeeSalaryStructure")
   payrollItems       PayrollItem[]     @relation("EmployeePayrollItems")
+  managerJobs        JobOpening[]      @relation("ManagerJobs")
+  panelInterviews    InterviewPanelMember[] @relation("PanelMemberEmployee")
+  interviewerFeedbacks InterviewFeedback[]  @relation("InterviewerFeedback")
+  stageHistoryChanges CandidateStageHistory[] @relation("StageHistoryChanger")
 
   @@index([employeeCode])
   @@index([email])
@@ -158,6 +162,7 @@ model Department {
   employees    Employee[]       @relation("DepartmentEmployees")
   manager      Employee?        @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
   projects     Project[]        @relation("DepartmentProjects")
+  jobs         JobOpening[]     @relation("DepartmentJobs")
 
   @@index([code])
   @@index([status])
@@ -575,6 +580,7 @@ model CalendarEvent {
   leave            Leave?            @relation("LeaveEvents", fields: [leaveId], references: [id], onDelete: Cascade)
   holiday          Holiday?          @relation("HolidayEvents", fields: [holidayId], references: [id], onDelete: Cascade)
   recurringEvent   RecurringEvent?   @relation("RecurringEventOccurrences", fields: [recurringEventId], references: [id], onDelete: Cascade)
+  interview        Interview?        @relation("InterviewCalendarEvent")
 
   @@index([employeeId])
   @@index([projectId])
@@ -735,6 +741,7 @@ enum DocumentEntityType {
   LEAVE
   ATTENDANCE
   GENERAL
+  RECRUITMENT
 }
 
 enum DocumentCategory {
@@ -769,6 +776,8 @@ model Document {
   // Relations
   uploadedBy   Employee           @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: Cascade)
   versions     DocumentVersion[]  @relation("DocumentVersions")
+  candidateDocuments CandidateDocument[] @relation("RecruitmentDocuments")
+  offerLetters       OfferLetter[]       @relation("OfferLetterDocument")
 
   @@index([entityType])
   @@index([entityId])
@@ -930,6 +939,201 @@ model TaxRule {
 
   @@map("tax_rules")
 }
+
+enum JobStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum CandidateStatus {
+  APPLIED
+  SCREENING
+  SHORTLISTED
+  INTERVIEW
+  OFFERED
+  HIRED
+  REJECTED
+  WITHDRAWN
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+enum InterviewResult {
+  PASS
+  FAIL
+  HOLD
+}
+
+enum OfferStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model JobOpening {
+  id              String        @id @default(uuid())
+  title           String
+  description     String
+  requirements    String?
+  departmentId    String
+  hiringManagerId String
+  status          JobStatus     @default(DRAFT)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  department      Department    @relation("DepartmentJobs", fields: [departmentId], references: [id], onDelete: Cascade)
+  hiringManager   Employee      @relation("ManagerJobs", fields: [hiringManagerId], references: [id], onDelete: Cascade)
+  candidates      Candidate[]
+  offers          OfferLetter[]
+
+  @@map("job_openings")
+}
+
+model Candidate {
+  id              String                  @id @default(uuid())
+  jobOpeningId    String
+  firstName       String
+  lastName        String
+  email           String
+  phone           String
+  status          CandidateStatus         @default(APPLIED)
+  resumeUrl       String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  // Relations
+  job             JobOpening              @relation(fields: [jobOpeningId], references: [id], onDelete: Cascade)
+  documents       CandidateDocument[]
+  interviews      Interview[]
+  feedbacks       InterviewFeedback[]
+  offers          OfferLetter[]
+  stageHistory    CandidateStageHistory[]
+
+  @@unique([email, phone])
+  @@map("candidates")
+}
+
+model CandidateDocument {
+  id          String    @id @default(uuid())
+  candidateId String
+  documentId  String    @unique
+  type        String
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  document    Document  @relation("RecruitmentDocuments", fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("candidate_documents")
+}
+
+model Interview {
+  id              String                 @id @default(uuid())
+  candidateId     String
+  title           String
+  type            String
+  scheduledAt     DateTime
+  durationMinutes Int                    @default(60)
+  status          InterviewStatus        @default(SCHEDULED)
+  calendarEventId String?                @unique
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  // Relations
+  candidate       Candidate              @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  panelMembers    InterviewPanelMember[]
+  calendarEvent   CalendarEvent?         @relation("InterviewCalendarEvent", fields: [calendarEventId], references: [id], onDelete: SetNull)
+  feedbacks       InterviewFeedback[]
+
+  @@map("interviews")
+}
+
+model InterviewPanelMember {
+  id          String    @id @default(uuid())
+  interviewId String
+  employeeId  String
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  employee    Employee  @relation("PanelMemberEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, employeeId])
+  @@map("interview_panel_members")
+}
+
+model InterviewFeedback {
+  id              String          @id @default(uuid())
+  interviewId     String
+  interviewerId   String
+  candidateId     String
+  score           Int
+  comments        String
+  result          InterviewResult @default(HOLD)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  interview       Interview       @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  interviewer     Employee        @relation("InterviewerFeedback", fields: [interviewerId], references: [id], onDelete: Cascade)
+  candidate       Candidate       @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("interview_feedbacks")
+}
+
+model OfferLetter {
+  id           String      @id @default(uuid())
+  candidateId  String
+  jobOpeningId String
+  grossSalary  Float
+  status       OfferStatus @default(DRAFT)
+  sentAt       DateTime?
+  expiresAt    DateTime?
+  documentId   String?     @unique
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  candidate    Candidate   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobOpening   JobOpening  @relation(fields: [jobOpeningId], references: [id], onDelete: Cascade)
+  document     Document?   @relation("OfferLetterDocument", fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@map("offer_letters")
+}
+
+model RecruitmentStage {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  sequence  Int      @unique
+  createdAt DateTime @default(now())
+
+  @@map("recruitment_stages")
+}
+
+model CandidateStageHistory {
+  id          String   @id @default(uuid())
+  candidateId String
+  stage       String
+  changedById String
+  createdAt   DateTime @default(now())
+
+  // Relations
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  changedBy   Employee  @relation("StageHistoryChanger", fields: [changedById], references: [id], onDelete: Cascade)
+
+  @@map("candidate_stage_history")
+}
+
 
 
 

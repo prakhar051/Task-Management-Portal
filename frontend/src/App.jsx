@@ -31,6 +31,13 @@ const SalaryStructure = lazy(() => import('./pages/SalaryStructure'));
 const Payroll = lazy(() => import('./pages/Payroll'));
 const PayrollDetails = lazy(() => import('./pages/PayrollDetails'));
 const Payslip = lazy(() => import('./pages/Payslip'));
+const RecruitmentDashboard = lazy(() => import('./pages/RecruitmentDashboard'));
+const Jobs = lazy(() => import('./pages/Jobs'));
+const JobDetails = lazy(() => import('./pages/JobDetails'));
+const Candidates = lazy(() => import('./pages/Candidates'));
+const CandidateDetails = lazy(() => import('./pages/CandidateDetails'));
+const InterviewCalendar = lazy(() => import('./pages/InterviewCalendar'));
+const Offers = lazy(() => import('./pages/Offers'));
 
 function App() {
   return (
@@ -393,6 +400,112 @@ function App() {
                   </div>
                 }>
                   <Payslip />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Recruitment & Applicant Tracking routes */}
+          <Route
+            path="recruitment"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <RecruitmentDashboard />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="recruitment/jobs"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Jobs />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="recruitment/jobs/:id"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <JobDetails />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="recruitment/candidates"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Candidates />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="recruitment/candidates/:id"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <CandidateDetails />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="recruitment/calendar"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR', 'MANAGER']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <InterviewCalendar />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="recruitment/offers"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'HR']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Offers />
                 </Suspense>
               </ProtectedRoute>
             }

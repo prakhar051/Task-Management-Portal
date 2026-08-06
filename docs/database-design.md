@@ -578,6 +578,21 @@ To optimize payroll processing lookups, salary mapping speeds, and payslips inde
 
 ---
 
+## 📂 11. Recruitment & ATS Indexes (Phase 14)
+
+To optimize recruitment pipeline boards searches and index matching performance:
+
+1.  **Candidate Model Indexes**:
+    *   `@@unique([email, phone])` — ensures unique candidate records and duplicate blocks.
+2.  **Interview Model Indexes**:
+    *   `@@unique([calendarEventId])` — speeds up calendar references lookups.
+3.  **InterviewPanelMember Model Indexes**:
+    *   `@@unique([interviewId, employeeId])` — prevents double-booking panel members.
+4.  **OfferLetter Model Indexes**:
+    *   `@@unique([documentId])` — links 1-to-1 offer contract letters files.
+
+---
+
 ## 🔗 Architecture & API Reference Links
 
 *   To inspect structural diagrams of component topologies: [docs/system-design.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/system-design.md)

@@ -32,6 +32,7 @@ Explore the deep technical implementation and design choices behind this project
 | **⏰ Attendance & Timesheets** | Work session tracking, break timers, overtime and percentage engines | [docs/attendance-module.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/attendance-module.md) |
 | **📂 Documents & Storage** | Decoupled storage providers, checksum verification, versioning histories | [docs/document-module.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/document-module.md) |
 | **💳 Payroll & Salary** | Structure mapping, progressive tax calculators, PDF payslips exports | [docs/payroll-module.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/payroll-module.md) |
+| **🎯 Recruitment & ATS** | Job positions publish, interview panels, conflict schedulers, onboarding pipelines | [docs/recruitment-module.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/recruitment-module.md) |
 
 ---
 

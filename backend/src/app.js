@@ -21,6 +21,10 @@ import timesheetRoutes from './routes/timesheet.routes.js';
 import documentRoutes from './routes/document.routes.js';
 import salaryRoutes from './routes/salary.routes.js';
 import payrollRoutes from './routes/payroll.routes.js';
+import jobRoutes from './routes/job.routes.js';
+import candidateRoutes from './routes/candidate.routes.js';
+import interviewRoutes from './routes/interview.routes.js';
+import offerRoutes from './routes/offer.routes.js';
 import { contextMiddleware } from './middleware/context.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
@@ -82,6 +86,10 @@ app.use('/api/timesheets', timesheetRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/salary', salaryRoutes);
 app.use('/api/payroll', payrollRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/candidates', candidateRoutes);
+app.use('/api/interviews', interviewRoutes);
+app.use('/api/offers', offerRoutes);
 
 // Global 404 handler for unmatched routes
 app.use(notFoundHandler);
