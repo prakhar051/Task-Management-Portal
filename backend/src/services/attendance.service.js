@@ -2,6 +2,7 @@ import AttendanceRepository from '../repositories/attendance.repository.js';
 import NotificationService from './notification.service.js';
 import ActivityService from './activity.service.js';
 import { prisma } from '../config/db.js';
+import { broadcastToAll } from '../utils/socket.js';
 
 class AttendanceService {
   async getEmployeeByUserId(userId) {
@@ -67,7 +68,9 @@ class AttendanceService {
       startTime: today
     });
 
-    return AttendanceRepository.getAttendanceForDay(emp.id, midnight);
+    const result = await AttendanceRepository.getAttendanceForDay(emp.id, midnight);
+    broadcastToAll('attendance:update', { type: 'checkin', employeeId: emp.id, date: midnight, eventVersion: 1 });
+    return result;
   }
 
   async checkOut(user) {
@@ -99,7 +102,9 @@ class AttendanceService {
     // Recalculate totals
     await this.recalculateAttendanceTotals(updatedAttendance.id);
 
-    return AttendanceRepository.getAttendanceForDay(emp.id, midnight);
+    const result = await AttendanceRepository.getAttendanceForDay(emp.id, midnight);
+    broadcastToAll('attendance:update', { type: 'checkout', employeeId: emp.id, date: midnight, eventVersion: 1 });
+    return result;
   }
 
   async startBreak(user) {
@@ -135,7 +140,9 @@ class AttendanceService {
       startTime: today
     });
 
-    return AttendanceRepository.getAttendanceForDay(emp.id, midnight);
+    const result = await AttendanceRepository.getAttendanceForDay(emp.id, midnight);
+    broadcastToAll('attendance:update', { type: 'break', employeeId: emp.id, date: midnight, eventVersion: 1 });
+    return result;
   }
 
   async endBreak(user) {
@@ -167,7 +174,9 @@ class AttendanceService {
       startTime: today
     });
 
-    return AttendanceRepository.getAttendanceForDay(emp.id, midnight);
+    const result = await AttendanceRepository.getAttendanceForDay(emp.id, midnight);
+    broadcastToAll('attendance:update', { type: 'break_end', employeeId: emp.id, date: midnight, eventVersion: 1 });
+    return result;
   }
 
   async submitCorrectionRequest(user, data) {

@@ -2051,6 +2051,61 @@ All endpoints are protected by `authenticateUser`.
 
 ---
 
+## 🔌 21. Socket.IO Real-Time Event Matrix
+
+WebSockets communicate using bidirectional messaging over Socket.IO connection handshakes authenticated via JWT parameter headers.
+
+| Event Key | Sender | Room / Channel | Description / Payload |
+| :--- | :--- | :--- | :--- |
+| `user:online` | Server | Global Broadcast | Emitted when a team user connects (`{ userId, name }`) |
+| `user:offline` | Server | Global Broadcast | Emitted when a team user session disconnects (`{ userId, name }`) |
+| `project:join` | Client | Server | Payload: `{ projectId }`. Enters user to project sync channel |
+| `project:leave` | Client | Server | Payload: `{ projectId }`. Departs user from project sync channel |
+| `user:viewing` | Client | `project:${projectId}` | Payload: `{ projectId, taskId }`. Syncs what card user is actively viewing |
+| `user:typing` | Client | `project:${projectId}` | Payload: `{ projectId, taskId, isTyping }`. Syncs typing indicators |
+| `task:lock` | Client | `project:${projectId}` | Payload: `{ taskId }`. Requests an exclusive edit lock for metadata form |
+| `task:unlock` | Client | `project:${projectId}` | Payload: `{ taskId }`. Releases editing lock |
+| `task:create` | Server | `project:${projectId}` | Pushes newly created task models to all dashboard columns |
+| `task:update` | Server | `project:${projectId}` | Pushes updated task parameters to all column views |
+| `task:status` | Server | `project:${projectId}` | Syncs Kanban card drag-and-drop movements instantly |
+| `comment:create` | Server | `project:${projectId}` | Pushes comment payload to task comments sections |
+| `notification:new` | Server | `employee:${userId}` | Router for private in-app notifications |
+| `attendance:update` | Server | Global Broadcast | Pushes active check-ins, check-outs, and breaks to roster widgets |
+| `calendar:update` | Server | Global Broadcast | Refreshes meeting feeds and leave timetables |
+| `candidate:update` | Server | Global Broadcast | Syncs candidate staging rosters in recruitment dashboards |
+| `asset:update` | Server | Global Broadcast | Refreshes hardware item allocations and logs |
+
+---
+
+## 📂 22. Company Knowledge Base Endpoints
+*   `GET /api/knowledge` — Lists published articles.
+*   `POST /api/knowledge` — Creates article drafts.
+*   `GET /api/knowledge/:id` — Fetches article details and bumps views count.
+*   `PATCH /api/knowledge/:id` — Edits article details and logs version snapshot.
+*   `DELETE /api/knowledge/:id` — Soft deletes article.
+*   `POST /api/knowledge/search` — Search guidelines articles.
+*   `POST /api/knowledge/favorite` — Toggle favorites bookmarks.
+*   `GET /api/knowledge/recent` — Lists recently viewed guidelines.
+
+## 🤖 23. AI Assistant & Query Copilot Endpoints
+*   `POST /api/ai/chat` — Continues prompts chat conversation session.
+*   `GET /api/ai/conversations` — Lists thread histories.
+*   `GET /api/ai/conversations/:id` — Fetches message streams.
+*   `DELETE /api/ai/conversations/:id` — Purges chat thread.
+*   `POST /api/ai/summarize` — Computes tasks or projects text summaries.
+*   `POST /api/ai/recommend` — Calculates workloads balancing recommendations.
+*   `POST /api/ai/search` — Executes semantic lookups.
+
+## ⚙️ 24. Workflow Automations Endpoints
+*   `GET /api/automation` — Lists rules.
+*   `POST /api/automation` — Configures triggers rules.
+*   `PATCH /api/automation/:id` — Modifies parameters.
+*   `DELETE /api/automation/:id` — Purges rule.
+*   `POST /api/automation/run/:id` — Triggers execution manually.
+*   `GET /api/automation/history` — Lists run execution logs histories.
+
+---
+
 ## 🔗 Architecture & Security References
 
 *   To understand how authentication tokens generated here are secured on the client: [docs/security-auth.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/security-auth.md)

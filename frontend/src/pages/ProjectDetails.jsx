@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useProjectStore } from '../store/projectStore';
 import { useAuthStore } from '../store/authStore';
+import useSocketStore from '../store/socketStore';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorState from '../components/dashboard/ErrorState';
 
@@ -14,6 +15,8 @@ import MemberAssignmentModal from '../components/projects/MemberAssignmentModal'
 export default function ProjectDetails() {
   const { id } = useParams();
   const currentUser = useAuthStore((state) => state.user) || { role: 'EMPLOYEE' };
+  const joinProject = useSocketStore((state) => state.joinProject);
+  const leaveProject = useSocketStore((state) => state.leaveProject);
 
   const {
     currentProject,
@@ -26,6 +29,15 @@ export default function ProjectDetails() {
 
   const [managerModalOpen, setManagerModalOpen] = useState(false);
   const [memberModalOpen, setMemberModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      joinProject(id);
+      return () => {
+        leaveProject(id);
+      };
+    }
+  }, [id, joinProject, leaveProject]);
 
   useEffect(() => {
     fetchProjectById(id);

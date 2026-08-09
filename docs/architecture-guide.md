@@ -536,6 +536,39 @@ Provides calculations executing:
 
 ---
 
+## 📂 16. Real-Time Collaborative Workspace Architecture (Phase 16)
+
+Phase 16 implements full bidirectional state synchronization across team browser sessions:
+
+### 16.1 Socket.IO Server Wrap
+Wraps Node's default `http` server to listen to REST endpoints and WebSocket protocols on the same port, avoiding CORS mismatches and route conflict blocks.
+
+### 16.2 Division of Rooms
+Organized into three subscription rooms:
+*   `project:${projectId}`: Syncs column card switches, checklist completions, task comments, and priority updates.
+*   `employee:${employeeId}`: For immediate push notification routing.
+*   `dashboard`: Synchronizes analytics, calendar feeds, and check-in statuses.
+
+### 16.3 Task Edit Locking
+Restricts edit permissions on task metadata forms to one user at a time. The lock automatically releases on save, cancel, disconnect, or inactivity timeout.
+
+---
+
+## 📂 17. AI Assistant, Knowledge Base & Automation Architecture (Phase 18)
+
+Phase 18 adds enterprise intelligence and workflows automation layers:
+
+### 17.1 LLM SDK Wrapper & Query Engine
+Integrates with `@google/genai` model `gemini-2.5-flash`. When `GEMINI_API_KEY` is not present, queries fall back to a database semantic rule parser matching categories and active profiles context.
+
+### 17.2 Knowledge Base Revision Engine
+Articles support markdown rendering. Categorized directories log and preserve historical drafts edits under incremental version indexes.
+
+### 17.3 Automated Workflows Engine
+Automations bind lifecycle service methods. Triggers evaluate conditions objects and fire matching callbacks to execute notifications, calendars, and candidate-to-onboarding transitions.
+
+---
+
 ## 🔗 Internal Configuration References
 
 To understand how these directories and patterns connect to installation, security, and schema designs:

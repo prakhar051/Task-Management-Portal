@@ -40,6 +40,8 @@ export const errorHandler = (err, req, res, next) => {
   res.status(statusCode).json({
     success: false,
     message,
+    requestId: req.requestId,
+    correlationId: req.correlationId,
     errors: errors.length > 0 ? errors : undefined
   });
 };

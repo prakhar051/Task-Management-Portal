@@ -1,12 +1,38 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import useSocketStore from '../../store/socketStore';
+import useAdminStore from '../../store/adminStore';
+import MaintenanceBanner from '../admin/MaintenanceBanner';
+import ConnectionStatus from '../realtime/ConnectionStatus';
+import OnlineUsers from '../realtime/OnlineUsers';
+import RealtimeToast from '../realtime/RealtimeToast';
+import RealtimeListener from '../realtime/RealtimeListener';
 import NotificationBell from '../notifications/NotificationBell';
 
 export default function MainLayout() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user) || { name: 'Employee', role: 'EMPLOYEE' };
+  const accessToken = useAuthStore((state) => state.accessToken);
   const logout = useAuthStore((state) => state.logout);
+  const connectSocket = useSocketStore((state) => state.connect);
+  const disconnectSocket = useSocketStore((state) => state.disconnect);
+
+  const maintenanceConfig = useAdminStore((state) => state.maintenanceConfig);
+  const fetchMaintenanceConfig = useAdminStore((state) => state.fetchMaintenanceConfig);
+
+  useEffect(() => {
+    fetchMaintenanceConfig();
+  }, [fetchMaintenanceConfig]);
+
+  useEffect(() => {
+    if (accessToken) {
+      connectSocket(accessToken);
+    }
+    return () => {
+      disconnectSocket();
+    };
+  }, [accessToken]);
 
   const handleLogout = async () => {
     await logout();
@@ -31,7 +57,21 @@ export default function MainLayout() {
     { name: 'Payroll Runs', path: '/payroll', icon: '⚙️', roles: ['ADMIN', 'HR'] },
     { name: 'My Payslips', path: '/payslips', icon: '🧾', roles: ['EMPLOYEE'] },
     { name: 'Recruitment', path: '/recruitment', icon: '🎯', roles: ['ADMIN', 'MANAGER', 'HR'] },
-    { name: 'Assets & Inventory', path: '/assets', icon: '🏷️', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] }
+    { name: 'Assets & Inventory', path: '/assets', icon: '🏷️', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'AI Assistant', path: '/ai-assistant', icon: '🤖', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Knowledge Base', path: '/knowledge', icon: '📚', roles: ['ADMIN', 'MANAGER', 'EMPLOYEE', 'HR'] },
+    { name: 'Automation Center', path: '/automation', icon: '⚙️', roles: ['ADMIN', 'MANAGER', 'HR'] },
+    { name: 'Admin Dashboard', path: '/admin', icon: '🛠️', roles: ['ADMIN'] },
+    { name: 'Organization Settings', path: '/organization-settings', icon: '🏢', roles: ['ADMIN'] },
+    { name: 'Feature Flags', path: '/feature-flags', icon: '🚩', roles: ['ADMIN'] },
+    { name: 'Email Settings', path: '/email-settings', icon: '📧', roles: ['ADMIN'] },
+    { name: 'Storage Settings', path: '/storage-settings', icon: '💾', roles: ['ADMIN'] },
+    { name: 'Backup Manager', path: '/backup-manager', icon: '📦', roles: ['ADMIN'] },
+    { name: 'Job Scheduler', path: '/job-scheduler', icon: '⏰', roles: ['ADMIN'] },
+    { name: 'Health Monitoring', path: '/monitoring', icon: '📈', roles: ['ADMIN'] },
+    { name: 'System Logs', path: '/system-logs', icon: '📜', roles: ['ADMIN'] },
+    { name: 'Error Logs', path: '/error-logs', icon: '🚨', roles: ['ADMIN'] },
+    { name: 'Maintenance Mode', path: '/maintenance-mode', icon: '🛠️', roles: ['ADMIN'] }
   ].filter((link) => link.roles.includes(user.role));
 
   return (
@@ -91,18 +131,16 @@ export default function MainLayout() {
 
       {/* Main Page Area */}
       <div className="flex-1 flex flex-col">
+        <MaintenanceBanner config={maintenanceConfig} />
         {/* Top Header Bar */}
         <header className="h-20 border-b border-slateDark-900 px-8 flex items-center justify-between glass z-20">
           <div className="flex items-center md:hidden space-x-3">
             <span className="text-2xl">🎯</span>
             <span className="font-extrabold text-white text-lg tracking-wider">TASKPORTAL</span>
           </div>
-          <div className="hidden md:flex items-center text-sm font-semibold text-slateDark-400">
-            <span>Server Time Status:</span>
-            <span className="text-emerald-500 ml-2 font-mono flex items-center">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping mr-2" />
-              Online
-            </span>
+          <div className="hidden md:flex items-center space-x-6">
+            <ConnectionStatus />
+            <OnlineUsers />
           </div>
           <div className="flex items-center space-x-4">
             <NotificationBell />
@@ -113,8 +151,10 @@ export default function MainLayout() {
         </header>
 
         {/* Dynamic Nested Page Content */}
-        <main className="flex-1 p-8 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-8 overflow-y-auto max-w-7xl w-full mx-auto relative">
           <Outlet />
+          <RealtimeToast />
+          <RealtimeListener />
         </main>
       </div>
     </div>

@@ -12,7 +12,7 @@ const ProjectMemberRoleEnum = z.enum([
   'MEMBER'
 ]);
 
-export const createProjectSchema = z.object({
+const projectBaseSchema = z.object({
   name: z.string().trim().min(2, 'Project name must be at least 2 characters long.'),
   code: z.string().trim().min(2, 'Project code must be at least 2 characters long.'),
   description: z.string().trim().nullable().optional(),
@@ -24,7 +24,9 @@ export const createProjectSchema = z.object({
   status: ProjectStatusEnum.default('PLANNING'),
   budget: z.number().nonnegative('Budget must be a non-negative decimal value.').nullable().optional(),
   progress: z.number().int().min(0, 'Progress must be at least 0.').max(100, 'Progress cannot exceed 100.').default(0)
-}).refine((data) => {
+});
+
+export const createProjectSchema = projectBaseSchema.refine((data) => {
   const start = new Date(data.startDate).getTime();
   const end = new Date(data.endDate).getTime();
   return start <= end;
@@ -33,7 +35,17 @@ export const createProjectSchema = z.object({
   path: ['endDate']
 });
 
-export const updateProjectSchema = createProjectSchema.partial();
+export const updateProjectSchema = projectBaseSchema.partial().refine((data) => {
+  if (data.startDate && data.endDate) {
+    const start = new Date(data.startDate).getTime();
+    const end = new Date(data.endDate).getTime();
+    return start <= end;
+  }
+  return true;
+}, {
+  message: 'End date must be greater than or equal to start date.',
+  path: ['endDate']
+});
 
 export const assignManagerSchema = z.object({
   managerId: z.string().uuid('Invalid manager employee UUID reference.').nullable()

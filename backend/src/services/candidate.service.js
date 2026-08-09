@@ -2,6 +2,7 @@ import CandidateRepository from '../repositories/candidate.repository.js';
 import NotificationService from './notification.service.js';
 import ActivityService from './activity.service.js';
 import { prisma } from '../config/db.js';
+import { broadcastToAll } from '../utils/socket.js';
 
 /**
  * AI-Ready Resume Parser Interface.
@@ -51,6 +52,8 @@ class CandidateService {
       description: `Candidate profile registered for ${candidate.firstName} ${candidate.lastName}.`
     });
 
+    broadcastToAll('candidate:update', { type: 'new', candidateId: candidate.id, eventVersion: 1 });
+
     return candidate;
   }
 
@@ -82,6 +85,8 @@ class CandidateService {
       entityType: 'CANDIDATE',
       entityId: id
     });
+
+    broadcastToAll('candidate:update', { type: 'stage', candidateId: candidate.id, stage, eventVersion: 1 });
 
     return candidate;
   }
@@ -240,6 +245,13 @@ class CandidateService {
           userAgent: 'System/Recruitment'
         }
       });
+
+      try {
+        const AutomationService = (await import('./automation.service.js')).default;
+        await AutomationService.trigger('CANDIDATE_HIRED', cand);
+      } catch (err) {
+        console.error('Automation check failed inside candidate hiring workflow:', err);
+      }
 
       return { user: newUser, employee: newEmp };
     });

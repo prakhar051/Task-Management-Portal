@@ -1,6 +1,7 @@
 import OfferRepository from '../repositories/offer.repository.js';
 import NotificationService from './notification.service.js';
 import ActivityService from './activity.service.js';
+import { broadcastToAll } from '../utils/socket.js';
 
 class OfferService {
   async createOffer(user, data) {
@@ -14,6 +15,8 @@ class OfferService {
       entityId: offer.id,
       description: `Generated offer letter contract proposal for Candidate Reference ID: ${data.candidateId}`
     });
+
+    broadcastToAll('offer:new', { offerId: offer.id, eventVersion: 1 });
 
     return offer;
   }

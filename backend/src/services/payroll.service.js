@@ -198,6 +198,13 @@ class PayrollService {
       metadata: { after: approved }
     });
 
+    try {
+      const AutomationService = (await import('./automation.service.js')).default;
+      await AutomationService.trigger('PAYROLL_APPROVED', approved);
+    } catch (err) {
+      console.error('Automation check failed inside payroll approval workflow:', err);
+    }
+
     return approved;
   }
 

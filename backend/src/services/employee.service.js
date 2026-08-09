@@ -165,6 +165,13 @@ export class EmployeeService {
       });
     }
 
+    try {
+      const AutomationService = (await import('./automation.service.js')).default;
+      await AutomationService.trigger('EMPLOYEE_JOINED', employee);
+    } catch (err) {
+      console.error('Automation check failed inside employee creation workflow:', err);
+    }
+
     return employee;
   }
 

@@ -1,65 +1,58 @@
 import { prisma } from '../config/db.js';
 
 class JobRepository {
-  async create(data) {
-    return prisma.jobOpening.create({
-      data,
-      include: {
-        department: { select: { name: true } },
-        hiringManager: { select: { firstName: true, lastName: true } }
-      }
+  async listJobs() {
+    return prisma.scheduledJob.findMany({
+      orderBy: { name: 'asc' }
     });
   }
 
-  async update(id, data) {
-    return prisma.jobOpening.update({
-      where: { id },
-      data,
-      include: {
-        department: { select: { name: true } },
-        hiringManager: { select: { firstName: true, lastName: true } }
-      }
-    });
-  }
-
-  async getById(id) {
-    return prisma.jobOpening.findUnique({
-      where: { id },
-      include: {
-        department: { select: { name: true } },
-        hiringManager: { select: { id: true, firstName: true, lastName: true, designation: true } },
-        candidates: true
-      }
-    });
-  }
-
-  async list() {
-    return prisma.jobOpening.findMany({
-      include: {
-        department: { select: { name: true } },
-        hiringManager: { select: { firstName: true, lastName: true } },
-        _count: { select: { candidates: true } }
-      }
-    });
-  }
-
-  async delete(id) {
-    return prisma.jobOpening.delete({
+  async getJobById(id) {
+    return prisma.scheduledJob.findUnique({
       where: { id }
     });
   }
 
-  async createStage(data) {
-    return prisma.recruitmentStage.upsert({
-      where: { name: data.name },
-      update: { sequence: data.sequence },
-      create: data
+  async getJobByName(name) {
+    return prisma.scheduledJob.findUnique({
+      where: { name }
     });
   }
 
-  async listStages() {
-    return prisma.recruitmentStage.findMany({
-      orderBy: { sequence: 'asc' }
+  async updateJob(id, data) {
+    return prisma.scheduledJob.update({
+      where: { id },
+      data
+    });
+  }
+
+  async createJob(data) {
+    return prisma.scheduledJob.create({ data });
+  }
+
+  async createExecution(data) {
+    return prisma.jobExecution.create({ data });
+  }
+
+  async updateExecution(id, data) {
+    return prisma.jobExecution.update({
+      where: { id },
+      data
+    });
+  }
+
+  async listExecutions(filters = {}) {
+    const where = {};
+    if (filters.jobId) where.jobId = filters.jobId;
+    if (filters.status) where.status = filters.status;
+
+    return prisma.jobExecution.findMany({
+      where,
+      orderBy: { executedAt: 'desc' },
+      take: 100,
+      include: {
+        job: true
+      }
     });
   }
 }

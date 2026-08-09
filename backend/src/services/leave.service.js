@@ -108,6 +108,13 @@ class LeaveService {
       leaveId: leave.id
     });
 
+    try {
+      const AutomationService = (await import('./automation.service.js')).default;
+      await AutomationService.trigger('LEAVE_APPROVED', updatedLeave);
+    } catch (err) {
+      console.error('Automation check failed inside leave approval workflow:', err);
+    }
+
     return updatedLeave;
   }
 

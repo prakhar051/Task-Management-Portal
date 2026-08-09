@@ -1,8 +1,19 @@
+import http from 'http';
 import app from './app.js';
+import { initializeSocket } from './utils/socket.js';
+import SchedulerService from './services/scheduler.service.js';
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, () => {
+const httpServer = http.createServer(app);
+initializeSocket(httpServer);
+
+// Setup scheduled jobs list
+SchedulerService.initializeJobs().catch((err) => {
+  console.error('Failed to register cron job schedulers:', err.message);
+});
+
+const server = httpServer.listen(PORT, () => {
   console.log(`🚀 Task Management API server listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
 });
 

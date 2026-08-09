@@ -1,4 +1,5 @@
 import NotificationRepository from '../repositories/notification.repository.js';
+import { sendToEmployee } from '../utils/socket.js';
 
 class NotificationService {
   async createNotification(data) {
@@ -31,7 +32,11 @@ class NotificationService {
         return null;
       }
 
-      return await NotificationRepository.create(data);
+      const created = await NotificationRepository.create(data);
+      if (created) {
+        sendToEmployee(userId, 'notification:new', { notification: created, eventVersion: 1 });
+      }
+      return created;
     } catch (err) {
       // NON-BLOCKING: Log error but do NOT throw, so parent operation succeeds
       console.error('[NotificationService] Non-blocking createNotification error:', err);
@@ -58,16 +63,21 @@ class NotificationService {
   }
 
   async markAsRead(id, userId) {
-    return await NotificationRepository.markAsRead(id, userId);
+    const result = await NotificationRepository.markAsRead(id, userId);
+    sendToEmployee(userId, 'notification:update', { id, isRead: true, eventVersion: 1 });
+    return result;
   }
 
   async markAllAsRead(userId) {
     await NotificationRepository.markAllAsRead(userId);
+    sendToEmployee(userId, 'notification:updateAll', { isRead: true, eventVersion: 1 });
     return { success: true };
   }
 
   async deleteNotification(id, userId) {
-    return await NotificationRepository.delete(id, userId);
+    const result = await NotificationRepository.delete(id, userId);
+    sendToEmployee(userId, 'notification:delete', { id, eventVersion: 1 });
+    return result;
   }
 
   async deleteBulkNotifications(ids, userId) {

@@ -3,6 +3,7 @@ import CandidateRepository from '../repositories/candidate.repository.js';
 import NotificationService from './notification.service.js';
 import ActivityService from './activity.service.js';
 import { prisma } from '../config/db.js';
+import { broadcastToAll } from '../utils/socket.js';
 
 class InterviewService {
   async scheduleInterview(user, data, panelEmployeeIds = []) {
@@ -68,6 +69,9 @@ class InterviewService {
       entityId: interview.id,
       description: `Scheduled ${data.type} interview for candidate ${cand.firstName} ${cand.lastName}.`
     });
+
+    broadcastToAll('interview:update', { type: 'schedule', interviewId: interview.id, eventVersion: 1 });
+    broadcastToAll('calendar:update', { eventVersion: 1 });
 
     return interview;
   }

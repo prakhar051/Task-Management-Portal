@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTaskStore } from '../store/taskStore';
+import useSocketStore from '../store/socketStore';
 import TaskToolbar from '../components/tasks/TaskToolbar';
 import TaskSearch from '../components/tasks/TaskSearch';
 import TaskFilters from '../components/tasks/TaskFilters';
@@ -16,8 +17,20 @@ export default function Tasks() {
   const viewMode = useTaskStore((state) => state.viewMode);
   const error = useTaskStore((state) => state.error);
   const clearSelection = useTaskStore((state) => state.clearSelection);
+  const projectId = useTaskStore((state) => state.filters.projectId);
+  const joinProject = useSocketStore((state) => state.joinProject);
+  const leaveProject = useSocketStore((state) => state.leaveProject);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (projectId) {
+      joinProject(projectId);
+      return () => {
+        leaveProject(projectId);
+      };
+    }
+  }, [projectId, joinProject, leaveProject]);
 
   useEffect(() => {
     fetchTasks();

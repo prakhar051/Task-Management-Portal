@@ -2,6 +2,7 @@ import AssetRepository from '../repositories/asset.repository.js';
 import NotificationService from './notification.service.js';
 import ActivityService from './activity.service.js';
 import { prisma } from '../config/db.js';
+import { broadcastToAll } from '../utils/socket.js';
 
 class AssetService {
   async createAsset(user, data) {
@@ -140,6 +141,8 @@ class AssetService {
         }
       });
 
+      broadcastToAll('asset:update', { type: 'assign', assetId: data.assetId, eventVersion: 1 });
+
       return assignment;
     });
   }
@@ -200,6 +203,8 @@ class AssetService {
           userAgent: 'System/AssetManagement'
         }
       });
+
+      broadcastToAll('asset:update', { type: 'return', assetId: assignment.assetId, eventVersion: 1 });
 
       return assignment;
     });
@@ -277,6 +282,8 @@ class AssetService {
           userId: user.id
         }
       });
+
+      broadcastToAll('asset:update', { type: 'transfer', assetId: data.assetId, eventVersion: 1 });
 
       // Log Activity
       await tx.activityLog.create({

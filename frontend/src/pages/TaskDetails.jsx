@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTaskStore } from '../store/taskStore';
 import { useAuthStore } from '../store/authStore';
+import useSocketStore from '../store/socketStore';
+import EditingIndicator from '../components/realtime/EditingIndicator';
 import CommentFeed from '../components/tasks/CommentFeed';
 import AttachmentList from '../components/tasks/AttachmentList';
 import LabelSelector from '../components/tasks/LabelSelector';
@@ -20,6 +22,8 @@ export default function TaskDetails() {
   const updateDependencies = useTaskStore((state) => state.updateDependencies);
   const deleteTask = useTaskStore((state) => state.deleteTask);
   const user = useAuthStore((state) => state.user);
+  const activeLocks = useSocketStore((state) => state.activeLocks);
+  const socketEmit = useSocketStore((state) => state.emit);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -58,6 +62,15 @@ export default function TaskDetails() {
     };
     loadData();
   }, [id, fetchTaskById, isAdmin]);
+
+  useEffect(() => {
+    if (id && currentTask) {
+      socketEmit('task:viewing', { taskId: id, projectId: currentTask.projectId });
+      return () => {
+        socketEmit('task:viewing', { taskId: null, projectId: null });
+      };
+    }
+  }, [id, currentTask, socketEmit]);
 
   const handleStatusChange = async (e) => {
     const targetStatus = e.target.value;
@@ -160,8 +173,27 @@ export default function TaskDetails() {
           {isAdmin && (
             <>
               <button
-                onClick={() => setIsEditOpen(true)}
-                className="px-4 py-2 bg-slateDark-900 hover:bg-slateDark-800 border border-slateDark-800 hover:border-slateDark-700 text-slateDark-300 hover:text-white rounded-xl text-xs font-bold transition-all"
+                onClick={() => {
+                  const activeLock = activeLocks[id];
+                  const isLockedByOther = activeLock && activeLock.userId !== user?.id;
+                  if (isLockedByOther) {
+                    alert(`Locked by ${activeLock.name}`);
+                    return;
+                  }
+                  socketEmit('task:lock', { taskId: id, projectId: currentTask.projectId }, (res) => {
+                    if (res && res.success) {
+                      setIsEditOpen(true);
+                    } else {
+                      alert(res?.message || 'Failed to lock editing.');
+                    }
+                  });
+                }}
+                disabled={activeLocks[id] && activeLocks[id].userId !== user?.id}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeLocks[id] && activeLocks[id].userId !== user?.id
+                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-850'
+                    : 'bg-slateDark-900 hover:bg-slateDark-800 border border-slateDark-800 hover:border-slateDark-700 text-slateDark-300 hover:text-white'
+                }`}
               >
                 ✏️ Edit Metadata
               </button>
@@ -175,6 +207,8 @@ export default function TaskDetails() {
           )}
         </div>
       </div>
+
+      <EditingIndicator taskId={id} />
 
       {/* Main Split details grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -446,6 +480,7 @@ export default function TaskDetails() {
         task={currentTask}
         isOpen={isEditOpen}
         onClose={() => {
+          socketEmit('task:unlock', { taskId: id, projectId: currentTask.projectId });
           setIsEditOpen(false);
           fetchTaskById(id); // reload on save
         }}

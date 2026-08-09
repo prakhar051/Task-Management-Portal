@@ -606,6 +606,25 @@ To optimize asset inventory boards and depreciation calculations:
 
 ---
 
+## 📂 13. Real-Time Collaborative Workspace Design (Phase 16)
+
+While the real-time presence, viewing, typing, and editing lock configurations are managed inside memory caches to ensure high-performance sub-millisecond broadcasts, all transactional operations (e.g. status changes, task creations, and assignments) are mapped directly to database writes to ensure relational integrity.
+
+---
+
+## 📂 14. AI, Knowledge Base & Automation Indexes (Phase 18)
+
+To support semantic searches and workflows evaluation, the database schemas configure the following indices:
+
+1.  **KnowledgeArticle Model**:
+    *   `@@unique([slug])` — guarantees clean navigation paths.
+2.  **KnowledgeFavorite Model**:
+    *   `@@unique([userId, articleId])` — enforces singular bookmarking relationships.
+3.  **UserSession & AiConversation Models**:
+    *   `@@index([userId])` — accelerates conversation logs retrievals.
+
+---
+
 ## 🔗 Architecture & API Reference Links
 
 *   To inspect structural diagrams of component topologies: [docs/system-design.md](file:///c:/Resume%20Project/Task%20Management%20Portal/docs/system-design.md)

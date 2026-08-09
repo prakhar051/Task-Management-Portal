@@ -3,6 +3,7 @@ import AssetRepository from '../repositories/asset.repository.js';
 import NotificationService from './notification.service.js';
 import ActivityService from './activity.service.js';
 import { prisma } from '../config/db.js';
+import { broadcastToAll } from '../utils/socket.js';
 
 class MaintenanceService {
   async createRecord(user, data) {
@@ -53,6 +54,8 @@ class MaintenanceService {
         }
       });
 
+      broadcastToAll('asset:update', { type: 'maintenance', assetId: data.assetId, recordId: record.id, eventVersion: 1 });
+
       return record;
     });
   }
@@ -91,6 +94,8 @@ class MaintenanceService {
           entityType: 'MAINTENANCE',
           entityId: id
         });
+
+        broadcastToAll('asset:update', { type: 'maintenance_closed', assetId: record.assetId, recordId: record.id, eventVersion: 1 });
       }
 
       return record;

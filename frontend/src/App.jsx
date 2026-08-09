@@ -44,6 +44,26 @@ const AssetAssignments = lazy(() => import('./pages/AssetAssignments'));
 const Maintenance = lazy(() => import('./pages/Maintenance'));
 const Vendors = lazy(() => import('./pages/Vendors'));
 
+// Phase 18 AI & Automation Pages
+const AiAssistant = lazy(() => import('./pages/AiAssistant'));
+const KnowledgeBase = lazy(() => import('./pages/KnowledgeBase'));
+const KnowledgeArticle = lazy(() => import('./pages/KnowledgeArticle'));
+const AutomationCenter = lazy(() => import('./pages/AutomationCenter'));
+const AutomationHistory = lazy(() => import('./pages/AutomationHistory'));
+
+// Phase 19 System Administration & DevOps Pages
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const OrganizationSettings = lazy(() => import('./pages/OrganizationSettings'));
+const FeatureFlags = lazy(() => import('./pages/FeatureFlags'));
+const EmailManagement = lazy(() => import('./pages/EmailManagement'));
+const StorageSettings = lazy(() => import('./pages/StorageSettings'));
+const BackupManager = lazy(() => import('./pages/BackupManager'));
+const Scheduler = lazy(() => import('./pages/Scheduler'));
+const Monitoring = lazy(() => import('./pages/Monitoring'));
+const SystemLogs = lazy(() => import('./pages/SystemLogs'));
+const ErrorLogs = lazy(() => import('./pages/ErrorLogs'));
+const MaintenanceMode = lazy(() => import('./pages/MaintenanceMode'));
+
 function App() {
   return (
     <BrowserRouter>
@@ -583,6 +603,232 @@ function App() {
                   </div>
                 }>
                   <Vendors />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Phase 18 Routes */}
+          <Route
+            path="ai-assistant"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <AiAssistant />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="knowledge"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <KnowledgeBase />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="knowledge/:id"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <KnowledgeArticle />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="automation"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <AutomationCenter />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="automation/history"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <AutomationHistory />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="admin"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <AdminDashboard />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="organization-settings"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <OrganizationSettings />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="feature-flags"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <FeatureFlags />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="email-settings"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <EmailManagement />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="storage-settings"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <StorageSettings />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="backup-manager"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <BackupManager />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="job-scheduler"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Scheduler />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="monitoring"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <Monitoring />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="system-logs"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <SystemLogs />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="error-logs"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <ErrorLogs />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="maintenance-mode"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                }>
+                  <MaintenanceMode />
                 </Suspense>
               </ProtectedRoute>
             }

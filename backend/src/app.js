@@ -28,7 +28,17 @@ import offerRoutes from './routes/offer.routes.js';
 import assetRoutes from './routes/asset.routes.js';
 import maintenanceRoutes from './routes/maintenance.routes.js';
 import vendorRoutes from './routes/vendor.routes.js';
+import knowledgeRoutes from './routes/knowledge.routes.js';
+import aiRoutes from './routes/ai.routes.js';
+import automationRoutes from './routes/automation.routes.js';
+import settingsRoutes from './routes/settings.routes.js';
+import backupRoutes from './routes/backup.routes.js';
+import monitoringRoutes from './routes/monitoring.routes.js';
+import featureFlagRoutes from './routes/featureFlag.routes.js';
+import { checkMaintenance } from './middleware/maintenance.middleware.js';
 import { contextMiddleware } from './middleware/context.middleware.js';
+import { standardResponse } from './middleware/standardResponse.middleware.js';
+import { generalLimiter, authLimiter } from './middleware/rateLimiter.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 // Load environmental variables
@@ -61,6 +71,15 @@ app.use(cookieParser());
 // Enable context storage for non-blocking logging
 app.use(contextMiddleware);
 
+// Standardize API response formats & generate trace tracking IDs
+app.use(standardResponse);
+
+// Enforce general request rate limits (throttling)
+app.use(generalLimiter);
+
+// Enforce maintenance mode interceptor blocks
+app.use(checkMaintenance);
+
 // Phase 1 Health API endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -71,31 +90,46 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Register routers
-app.use('/api/auth', authRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/employees', employeeRoutes);
-app.use('/api/departments', departmentRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/activity', activityRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/calendar', calendarRoutes);
-app.use('/api/leaves', leaveRoutes);
-app.use('/api/attendance', attendanceRoutes);
-app.use('/api/timesheets', timesheetRoutes);
-app.use('/api/documents', documentRoutes);
-app.use('/api/salary', salaryRoutes);
-app.use('/api/payroll', payrollRoutes);
-app.use('/api/jobs', jobRoutes);
-app.use('/api/candidates', candidateRoutes);
-app.use('/api/interviews', interviewRoutes);
-app.use('/api/offers', offerRoutes);
-app.use('/api/assets', assetRoutes);
-app.use('/api/maintenance', maintenanceRoutes);
-app.use('/api/vendors', vendorRoutes);
+// Register routers (with authLimiter applied to sensitive authentication routes)
+app.use(['/api/auth', '/api/v1/auth'], authLimiter, authRoutes);
+
+const routesMap = {
+  dashboard: dashboardRoutes,
+  employees: employeeRoutes,
+  departments: departmentRoutes,
+  projects: projectRoutes,
+  tasks: taskRoutes,
+  notifications: notificationRoutes,
+  activity: activityRoutes,
+  analytics: analyticsRoutes,
+  reports: reportRoutes,
+  calendar: calendarRoutes,
+  leaves: leaveRoutes,
+  attendance: attendanceRoutes,
+  timesheets: timesheetRoutes,
+  documents: documentRoutes,
+  salary: salaryRoutes,
+  payroll: payrollRoutes,
+  jobs: jobRoutes,
+  candidates: candidateRoutes,
+  interviews: interviewRoutes,
+  offers: offerRoutes,
+  assets: assetRoutes,
+  maintenance: maintenanceRoutes,
+  vendors: vendorRoutes,
+  knowledge: knowledgeRoutes,
+  ai: aiRoutes,
+  automation: automationRoutes,
+  'admin/settings': settingsRoutes,
+  'admin/backups': backupRoutes,
+  'admin/monitoring': monitoringRoutes,
+  'admin/features': featureFlagRoutes
+};
+
+// Register all routes for both backward-compatible '/api' and versioned '/api/v1' prefixes
+for (const [routePath, router] of Object.entries(routesMap)) {
+  app.use([`/api/${routePath}`, `/api/v1/${routePath}`], router);
+}
 
 // Global 404 handler for unmatched routes
 app.use(notFoundHandler);

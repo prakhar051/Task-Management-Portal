@@ -2,6 +2,7 @@ import { TaskRepository } from '../repositories/task.repository.js';
 import { prisma } from '../config/db.js';
 import NotificationService from './notification.service.js';
 import ActivityService from './activity.service.js';
+import { broadcastToProject } from '../utils/socket.js';
 
 export class TaskService {
   /**
@@ -342,6 +343,8 @@ export class TaskService {
       metadata: { before: null, after: task, changes: null }
     });
 
+    broadcastToProject(task.projectId, 'task:create', { task, eventVersion: 1 });
+
     return task;
   }
 
@@ -406,6 +409,8 @@ export class TaskService {
       metadata: { before: task, after: updatedTask, changes: data }
     });
 
+    broadcastToProject(updatedTask.projectId, 'task:update', { task: updatedTask, eventVersion: 1 });
+
     // Notify all task assignees
     if (task.assignees) {
       for (const a of task.assignees) {
@@ -421,6 +426,15 @@ export class TaskService {
             actionUrl: `/tasks/${id}`
           });
         }
+      }
+    }
+
+    if (targetStatus === 'COMPLETED' && task.status !== 'COMPLETED') {
+      try {
+        const AutomationService = (await import('./automation.service.js')).default;
+        await AutomationService.trigger('TASK_COMPLETED', updatedTask);
+      } catch (err) {
+        console.error('Automation trigger execution failed inside updateTask:', err);
       }
     }
 
@@ -462,6 +476,8 @@ export class TaskService {
       metadata: { before: task.status, after: status, changes: { status } }
     });
 
+    broadcastToProject(updatedTask.projectId, 'task:status', { taskId: id, status, task: updatedTask, eventVersion: 1 });
+
     // Notify all task assignees
     if (task.assignees) {
       for (const a of task.assignees) {
@@ -483,6 +499,15 @@ export class TaskService {
             actionUrl: `/tasks/${id}`
           });
         }
+      }
+    }
+
+    if (status === 'COMPLETED' && task.status !== 'COMPLETED') {
+      try {
+        const AutomationService = (await import('./automation.service.js')).default;
+        await AutomationService.trigger('TASK_COMPLETED', updatedTask);
+      } catch (err) {
+        console.error('Automation trigger execution failed inside updateStatus:', err);
       }
     }
 
@@ -522,6 +547,8 @@ export class TaskService {
       entityId: id,
       description: `Assigned task ${task.taskCode} assignees list`
     });
+
+    broadcastToProject(task.projectId, 'task:assign', { taskId: id, employeeIds, eventVersion: 1 });
 
     // Notify newly assigned employees
     const employees = await prisma.employee.findMany({
@@ -617,15 +644,32 @@ export class TaskService {
       });
     }
 
+    broadcastToProject(task.projectId, 'comment:create', { taskId, comment: result, eventVersion: 1 });
+
     return result;
   }
 
   static async updateComment(commentId, comment, employeeId) {
-    return TaskRepository.updateComment(commentId, comment, employeeId);
+    const result = await TaskRepository.updateComment(commentId, comment, employeeId);
+    if (result && result.taskId) {
+      const task = await prisma.task.findUnique({ where: { id: result.taskId } });
+      if (task) {
+        broadcastToProject(task.projectId, 'comment:update', { taskId: task.id, comment: result, eventVersion: 1 });
+      }
+    }
+    return result;
   }
 
   static async deleteComment(commentId, employeeId) {
-    return TaskRepository.deleteComment(commentId, employeeId);
+    const comment = await prisma.taskComment.findUnique({ where: { id: commentId } });
+    const result = await TaskRepository.deleteComment(commentId, employeeId);
+    if (comment && comment.taskId) {
+      const task = await prisma.task.findUnique({ where: { id: comment.taskId } });
+      if (task) {
+        broadcastToProject(task.projectId, 'comment:delete', { taskId: task.id, commentId, eventVersion: 1 });
+      }
+    }
+    return result;
   }
 
   static async getComments(taskId) {
@@ -671,6 +715,8 @@ export class TaskService {
       }
     }
 
+    broadcastToProject(task.projectId, 'task:attachment', { taskId, attachment: result, eventVersion: 1 });
+
     return result;
   }
 
@@ -696,6 +742,9 @@ export class TaskService {
       description: `Task ${task.taskCode} ("${task.title}") soft deleted`,
       metadata: { before: task, after: result, changes: null }
     });
+
+    broadcastToProject(task.projectId, 'task:delete', { taskId: id, eventVersion: 1 });
+
     return result;
   }
 
