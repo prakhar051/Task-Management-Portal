@@ -30,7 +30,10 @@ export const initializeSocket = (server) => {
         console.log('[Socket CORS Debug] Clean Allowed Origins:', cleanAllowedOrigins);
         if (!origin) return callback(null, true);
         const cleanOrigin = origin.trim().replace(/\/$/, '');
-        if (cleanAllowedOrigins.includes(cleanOrigin)) {
+        if (
+          cleanAllowedOrigins.includes(cleanOrigin) ||
+          /^https:\/\/.*\.vercel\.app$/.test(cleanOrigin)
+        ) {
           return callback(null, true);
         }
         console.warn('[Socket CORS Debug] Origin rejected:', cleanOrigin);

@@ -73,7 +73,10 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     const cleanOrigin = origin.trim().replace(/\/$/, '');
-    if (cleanAllowedOrigins.includes(cleanOrigin)) {
+    if (
+      cleanAllowedOrigins.includes(cleanOrigin) ||
+      /^https:\/\/.*\.vercel\.app$/.test(cleanOrigin)
+    ) {
       return callback(null, true);
     }
     console.warn('[CORS Debug] Origin rejected:', cleanOrigin);
