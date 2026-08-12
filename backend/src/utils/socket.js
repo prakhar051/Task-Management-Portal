@@ -26,11 +26,14 @@ export const initializeSocket = (server) => {
   io = new Server(server, {
     cors: {
       origin: (origin, callback) => {
+        console.log('[Socket CORS Debug] Request Origin:', origin);
+        console.log('[Socket CORS Debug] Clean Allowed Origins:', cleanAllowedOrigins);
         if (!origin) return callback(null, true);
         const cleanOrigin = origin.trim().replace(/\/$/, '');
         if (cleanAllowedOrigins.includes(cleanOrigin)) {
           return callback(null, true);
         }
+        console.warn('[Socket CORS Debug] Origin rejected:', cleanOrigin);
         return callback(new Error(`Origin ${origin} not allowed by CORS`));
       },
       methods: ['GET', 'POST'],

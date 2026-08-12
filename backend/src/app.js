@@ -66,6 +66,9 @@ const cleanAllowedOrigins = Array.from(
 
 app.use(cors({
   origin: (origin, callback) => {
+    console.log('[CORS Debug] Request Origin:', origin);
+    console.log('[CORS Debug] Clean Allowed Origins:', cleanAllowedOrigins);
+    
     // Allow requests with no origin (like mobile apps, curl, postman)
     if (!origin) return callback(null, true);
     
@@ -73,6 +76,7 @@ app.use(cors({
     if (cleanAllowedOrigins.includes(cleanOrigin)) {
       return callback(null, true);
     }
+    console.warn('[CORS Debug] Origin rejected:', cleanOrigin);
     return callback(new Error(`Origin ${origin} not allowed by CORS`));
   },
   credentials: true,
