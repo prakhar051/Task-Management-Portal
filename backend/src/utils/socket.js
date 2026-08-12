@@ -12,9 +12,27 @@ const userStatuses = new Map();
 const editingLocks = new Map();
 
 export const initializeSocket = (server) => {
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'https://task-management-portal-nine.vercel.app'
+  ];
+  if (process.env.CLIENT_URL) allowedOrigins.push(process.env.CLIENT_URL);
+  if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
+
+  const cleanAllowedOrigins = Array.from(
+    new Set(allowedOrigins.map(url => url.trim().replace(/\/$/, '')))
+  );
+
   io = new Server(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        const cleanOrigin = origin.trim().replace(/\/$/, '');
+        if (cleanAllowedOrigins.includes(cleanOrigin)) {
+          return callback(null, true);
+        }
+        return callback(new Error(`Origin ${origin} not allowed by CORS`));
+      },
       methods: ['GET', 'POST'],
       credentials: true
     }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuthStore } from '../../store/authStore';
 import ProgressBar from './ProgressBar';
+import { API_URL } from '../../api/apiClient';
 
 export default function ProjectCard({ project, onAssignManagerClick }) {
   const currentUser = useAuthStore((state) => state.user) || { role: 'EMPLOYEE' };
@@ -10,8 +11,7 @@ export default function ProjectCard({ project, onAssignManagerClick }) {
 
   const getAvatarPath = (path) => {
     if (!path) return null;
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const baseUrl = API_URL.replace('/api', '');
+    const baseUrl = API_URL.replace(/\/api(\/v1)?\/?$/, '');
     return `${baseUrl}${path}`;
   };
 

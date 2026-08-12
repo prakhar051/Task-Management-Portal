@@ -4,7 +4,14 @@ import useAssetStore from './assetStore';
 import useMaintenanceStore from './maintenanceStore';
 import useVendorStore from './vendorStore';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_SOCKET_URL) {
+    return import.meta.env.VITE_SOCKET_URL;
+  }
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  return apiUrl.replace(/\/api(\/v1)?\/?$/, '');
+};
+const SOCKET_URL = getSocketUrl();
 
 const useSocketStore = create((set, get) => ({
   socket: null,

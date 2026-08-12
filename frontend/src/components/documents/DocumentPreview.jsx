@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '../../api/apiClient';
 
 export default function DocumentPreview({ doc, isOpen, onClose }) {
   if (!isOpen || !doc) return null;
@@ -8,7 +9,7 @@ export default function DocumentPreview({ doc, isOpen, onClose }) {
   const extension = latestVer?.extension?.toLowerCase();
   
   // Resolve inline preview URL:
-  const previewUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/${doc.id}/preview`;
+  const previewUrl = `${API_URL}/documents/${doc.id}/preview`;
 
   const isImage = ['png', 'jpg', 'jpeg', 'gif'].includes(extension);
   const isPdf = extension === 'pdf';

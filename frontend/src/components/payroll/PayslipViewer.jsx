@@ -1,11 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_URL } from '../../api/apiClient';
 
 export default function PayslipViewer({ isOpen, onClose, itemId, payslipNumber }) {
   if (!isOpen || !itemId) return null;
 
   // Resolve payslip download/view path:
-  const pdfUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/payroll/payslip/${itemId}`;
+  const pdfUrl = `${API_URL}/payroll/payslip/${itemId}`;
 
   return (
     <AnimatePresence>

@@ -4,6 +4,7 @@ import { useEmployeeStore } from '../store/employeeStore';
 import { useAuthStore } from '../store/authStore';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorState from '../components/dashboard/ErrorState';
+import { API_URL } from '../api/apiClient';
 
 export default function EmployeeDetails() {
   const { id } = useParams();
@@ -39,8 +40,7 @@ export default function EmployeeDetails() {
 
   const getAvatarPath = (path) => {
     if (!path) return null;
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const baseUrl = API_URL.replace('/api', '');
+    const baseUrl = API_URL.replace(/\/api(\/v1)?\/?$/, '');
     return `${baseUrl}${path}`;
   };
 

@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useCandidateStore } from '../store/candidateStore';
 import { useInterviewStore } from '../store/interviewStore';
 import { useOfferStore } from '../store/offerStore';
-import { apiClient } from '../api/apiClient';
+import { apiClient, API_URL } from '../api/apiClient';
 import ResumeViewer from '../components/recruitment/ResumeViewer';
 import InterviewScheduler from '../components/recruitment/InterviewScheduler';
 import FeedbackModal from '../components/recruitment/FeedbackModal';
@@ -202,7 +202,7 @@ export default function CandidateDetails() {
                   📄 {resumeDoc.document?.name}
                 </span>
                 <a
-                  href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/${resumeDoc.documentId}/download`}
+                  href={`${API_URL}/documents/${resumeDoc.documentId}/download`}
                   className="text-brand-400 hover:text-white"
                 >
                   Download

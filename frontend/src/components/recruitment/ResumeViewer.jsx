@@ -1,4 +1,5 @@
 import React from 'react';
+import { API_URL } from '../../api/apiClient';
 
 export default function ResumeViewer({ candidate }) {
   const resumeDoc = candidate?.documents?.find((d) => d.type === 'RESUME');
@@ -11,7 +12,7 @@ export default function ResumeViewer({ candidate }) {
   }
 
   // Bind inline preview path
-  const pdfUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/${resumeDoc.documentId}/preview`;
+  const pdfUrl = `${API_URL}/documents/${resumeDoc.documentId}/preview`;
 
   return (
     <div className="bg-slateDark-950/40 border border-slateDark-900 rounded-3xl p-5 space-y-4 shadow-md select-none">

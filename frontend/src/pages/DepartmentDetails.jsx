@@ -4,6 +4,7 @@ import { useDepartmentStore } from '../store/departmentStore';
 import { useAuthStore } from '../store/authStore';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorState from '../components/dashboard/ErrorState';
+import { API_URL } from '../api/apiClient';
 
 // Sub-components
 import DepartmentCard from '../components/departments/DepartmentCard';
@@ -45,8 +46,7 @@ export default function DepartmentDetails() {
 
   const getAvatarPath = (path) => {
     if (!path) return null;
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const baseUrl = API_URL.replace('/api', '');
+    const baseUrl = API_URL.replace(/\/api(\/v1)?\/?$/, '');
     return `${baseUrl}${path}`;
   };
 
