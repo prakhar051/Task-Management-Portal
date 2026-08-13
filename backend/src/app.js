@@ -35,6 +35,7 @@ import settingsRoutes from './routes/settings.routes.js';
 import backupRoutes from './routes/backup.routes.js';
 import monitoringRoutes from './routes/monitoring.routes.js';
 import featureFlagRoutes from './routes/featureFlag.routes.js';
+import healthRoutes from './routes/health.routes.js';
 import { checkMaintenance } from './middleware/maintenance.middleware.js';
 import { contextMiddleware } from './middleware/context.middleware.js';
 import { standardResponse } from './middleware/standardResponse.middleware.js';
@@ -111,15 +112,10 @@ app.use(generalLimiter);
 // Enforce maintenance mode interceptor blocks
 app.use(checkMaintenance);
 
-// Phase 1 Health API endpoint
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    status: 'UP',
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'development'
-  });
-});
+// Register health routes (public, bypassed from maintenance/rate-limiting)
+app.use('/health', healthRoutes);
+app.use('/api/health', healthRoutes);
+app.use('/api/v1/health', healthRoutes);
 
 // Register routers (with authLimiter applied to sensitive authentication routes)
 app.use(['/api/auth', '/api/v1/auth'], authLimiter, authRoutes);

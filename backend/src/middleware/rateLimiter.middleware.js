@@ -8,6 +8,11 @@ class InMemoryRateLimiter {
 
   limit() {
     return (req, res, next) => {
+      const skipPaths = ['/health', '/api/health', '/api/v1/health'];
+      if (skipPaths.includes(req.path)) {
+        return next();
+      }
+
       const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
       const now = Date.now();
 

@@ -64,3 +64,27 @@ Validate the E2E lifecycle (create candidate, convert to employee, clock attenda
 cd backend
 node scratch/test_final_system.js
 ```
+
+---
+
+## 🏥 Health Check
+
+Validate and monitor the system status (runtimes, database connection health) using the following public, non-rate-limited endpoints:
+
+* **GET** `/health`
+* **GET** `/api/health`
+* **GET** `/api/v1/health`
+
+### Example Response (HTTP 200)
+```json
+{
+  "success": true,
+  "status": "UP",
+  "service": "Task Management Portal API",
+  "version": "1.0.0",
+  "environment": "production",
+  "timestamp": "2026-08-13T10:25:53.000Z",
+  "uptime": 1234.56,
+  "database": "CONNECTED"
+}
+```

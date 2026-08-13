@@ -67,6 +67,15 @@ class HealthService {
     const list = await MonitoringRepository.listHealthSnapshots(60);
     return list.reverse();
   }
+
+  async checkDatabaseConnection() {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
 }
 
 export default new HealthService();

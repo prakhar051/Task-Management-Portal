@@ -5,7 +5,9 @@ import { prisma } from '../config/db.js';
 export async function checkMaintenance(req, res, next) {
   // Allow system check endpoints or authentication routes to bypass block
   const bypassPaths = [
+    '/health',
     '/api/health',
+    '/api/v1/health',
     '/api/auth/login',
     '/api/auth/refresh',
     '/api/auth/logout',
